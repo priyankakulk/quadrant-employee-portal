@@ -4,7 +4,7 @@ server = 'gateway-server-db.database.windows.net'
 database = 'gatewayDB'
 username = 'gateway'
 password = 'sql#12345'
-driver = '{ODBC Driver 18 for SQL Server}'
+driver = '{ODBC Driver 17 for SQL Server}'
 
 def get_connection():
     conn_str = (

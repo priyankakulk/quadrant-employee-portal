@@ -20,6 +20,7 @@ router = APIRouter()
 
 @router.get("/employees")
 def get_employee_by_username(username: Optional[str] = Query(None), password: Optional[str] = Query(None)):
+    print("hello", username)
     if(username):
         with get_connection() as conn:
             cursor = conn.cursor()
@@ -27,7 +28,7 @@ def get_employee_by_username(username: Optional[str] = Query(None), password: Op
                 SELECT EmployeeId, Username, PasswordHash
                 FROM Users
                 WHERE Username = ?
-            """, username)
+            """, (username,))
 
             cred_row = cursor.fetchone()
             if not cred_row:
