@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+#from fastapi import FastAPI
 # from fastapi.middleware.cors import CORSMiddleware
 from fastapi import APIRouter, Query
 from typing import Optional
@@ -56,12 +56,50 @@ def get_employee_by_username(username: Optional[str] = Query(None), password: Op
                 "last_name": emp_row[2],
                 "email": emp_row[3]
             }
-
+    cursor.close()
+    conn.close()
     return {"error": "Username query parameter not provided"}
 
 def hash_password(plain_password: str) -> str:
     hashed = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt())
     return hashed.decode('utf-8')  # Store as string in SQL
 
-def register_employee(username, employee):
-    print(username, employee)
+@router.get("/registerUser")
+def register_employee(id: int, username: str, password: str):
+    with get_connection as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT EmployeeId, Username, PasswordHash
+            FROM Users
+            WHERE Username = ?
+        """, username)
+
+        cred_row = cursor.fetchone()
+        if cred_row:
+            return {"error": "User already exists"}
+        
+        cursor.execute("""
+            SELECT EmployeeID, Role
+            FROM Employees
+            WHERE EmployeeID = ?
+        """, id)
+        cred_row = cursor.fetchone()
+        if not cred_row:
+            return{"error": "Employee not recognized"}
+        
+        #get role
+        role = cred_row[1]
+        #hash_password
+        hashed_pass = hash_password(password)
+        #insert row
+        cursor.execute('''
+            INSERT INTO Users (EmployeeID, Username, PasswordHash, Role)
+            VALUES (?, ?, ?, ?)
+        ''', (id, username, hashed_pass, role))
+
+        # 3. Commit the transaction
+        conn.commit()
+
+        # 4. Close the connection
+        cursor.close()
+        conn.close()
