@@ -1,9 +1,9 @@
 import pyodbc
 
-server = 'gateway-server-db.database.windows.net'
-database = 'gatewayDB'
-username = 'gateway'
-password = 'sql#12345'
+server = 'gateway-server-empport.database.windows.net'
+database = 'EmployeePortal'
+username = 'gatewayserve'
+password = 'GatewayRocks!'
 driver = '{ODBC Driver 18 for SQL Server}'
 
 def get_connection():
