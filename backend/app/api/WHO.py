@@ -32,9 +32,9 @@ def get_subordinates(EID: int):
         cursor = conn.cursor()
         #cursor.execute()
         query = """
-            SELECT e.EmployeeId, e.firstName, e.lastName, e.workEmail
+            SELECT e.employeeId, e.firstName, e.lastName, e.workEmail
             FROM employeesHierarchy h
-            JOIN employees e ON h.descendant = e.EmployeeId
+            JOIN employees e ON h.descendant = e.employeeId
             WHERE h.ancestor = ? AND h.depth > 0
             ORDER BY h.depth ASC;
         """
