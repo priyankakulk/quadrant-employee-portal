@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from app.models.certification import Certifications, CertificationResources, Exams, Questions, Badges
+from app.models.certification import Certification, CertificationResources, Exams, Questions, Badges
 from app.services.connect import get_connection
 
 router = APIRouter()
