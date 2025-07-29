@@ -14,7 +14,7 @@ def get_connection():
         f"Uid={username};"
         f"Pwd={password};"
         f"Encrypt=yes;"
-        f"TrustServerCertificate=yes;"
+        f"TrustServerCertificate=no;"
         f"Connection Timeout=30;"
     )
     return pyodbc.connect(conn_str)
