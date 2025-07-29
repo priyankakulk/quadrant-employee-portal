@@ -24,11 +24,11 @@ def get_tickets(user: Optional[int] = Query(None),
 
     # Map query params to SQL column names and operators
     filters = {
-        "EmployeeID = ?": user,
-        "Severity = ?": severity,
-        "Status = ?": status,
-        "CreatedDate >= ?": from_date,
-        "CreatedDate <= ?": to_date
+        "employeeID = ?": user,
+        "severity = ?": severity,
+        "status = ?": status,
+        "startDate >= ?": from_date,
+        "startDate <= ?": to_date
     }
 
      #for every clause and value, if the value exists (filter is there)
@@ -46,11 +46,11 @@ def get_tickets(user: Optional[int] = Query(None),
     #formats the results
     results = [
             {
-                "ticketNumber": row.TicketID,
-                "employeeId": row.EmployeeID,
-                "severity": row.Severity,
-                "status": row.Status,
-                "startDate": row.CreatedDate,
+                "ticketNumber": row.ticketNumber,
+                "employeeId": row.employeeId,
+                "severity": row.severity,
+                "status": row.status,
+                "startDate": row.startDate,
             }
             for row in rows
         ]
@@ -111,7 +111,7 @@ def update_ticket_status(Id: int):
     cursor.execute("""
         SELECT role
         FROM Employees
-        WHERE EmployeeId = ?
+        WHERE employeeId = ?
     """, Id)
 
     cred_row = cursor.fetchone()
