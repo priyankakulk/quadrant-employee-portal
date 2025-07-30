@@ -20,3 +20,4 @@ app.include_router(onboarding.router, prefix="/api")
 app.include_router(ittickets.router, prefix="/api")
 # app.include_router(training.router, prefix="/api")
 # app.include_router(leaveapplications.router, prefix="/api")
+>>>>>>> a1d18acbd0d9aab01cd1e3d4b16700ff18a4116f
