@@ -26,9 +26,9 @@ def get_employee_by_username(username: Optional[str] = Query(None), password: Op
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT EmployeeId, Username, PasswordHash
+                SELECT employeeId, username, passwordHash
                 FROM Users
-                WHERE Username = ?
+                WHERE username = ?
             """, (username,))
 
             cred_row = cursor.fetchone()
@@ -42,10 +42,10 @@ def get_employee_by_username(username: Optional[str] = Query(None), password: Op
             # if hashed_pw != password:
                 return {"error": "Incorrect password"}
             cursor.execute("""
-                SELECT EmployeeID, FirstName, LastName, WorkEmail
+                SELECT employeeID, firstName, lastName, workEmail, role
                 FROM Employees
-                WHERE EmployeeId = ?
-            """, employee_id)
+                WHERE employeeId = ?
+            """, (employee_id,))
 
             emp_row = cursor.fetchone()
             if not emp_row:
@@ -55,7 +55,8 @@ def get_employee_by_username(username: Optional[str] = Query(None), password: Op
                 "id": emp_row[0],
                 "first_name": emp_row[1],
                 "last_name": emp_row[2],
-                "email": emp_row[3]
+                "email": emp_row[3],
+                "role": emp_row[4]
             }
     cursor.close()
     conn.close()
@@ -94,42 +95,44 @@ def hash_password(plain_password: str) -> str:
     hashed = bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt())
     return hashed.decode('utf-8')  # Store as string in SQL
 
-# @router.get("/registerUser")
-# def register_employee(id: int, username: str, password: str):
-#     with get_connection as conn:
-#         cursor = conn.cursor()
-#         cursor.execute("""
-#             SELECT EmployeeId, Username, PasswordHash
-#             FROM Users
-#             WHERE Username = ?
-#         """, username)
+#check to make sure all columns are labeled correctly cause this code didn't run last time
+@router.get("/registerUser")
+def register_employee(id: int, username: str, password: str):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT employeeId, username, passwordHash
+            FROM Users
+            WHERE username = ?
+        """, (username,))
 
-#         cred_row = cursor.fetchone()
-#         if cred_row:
-#             return {"error": "User already exists"}
+        cred_row = cursor.fetchone()
+        if cred_row:
+            return {"error": "User already exists"}
         
-#         cursor.execute("""
-#             SELECT EmployeeID, Role
-#             FROM Employees
-#             WHERE EmployeeID = ?
-#         """, id)
-#         cred_row = cursor.fetchone()
-#         if not cred_row:
-#             return{"error": "Employee not recognized"}
+        cursor.execute("""
+            SELECT employeeID, role
+            FROM Employees
+            WHERE employeeID = ?
+        """, (id,))
+        cred_row = cursor.fetchone()
+        if not cred_row:
+            return{"error": "Employee not recognized"}
         
-#         #get role
-#         role = cred_row[1]
-#         #hash_password
-#         hashed_pass = hash_password(password)
-#         #insert row
-#         cursor.execute('''
-#             INSERT INTO Users (EmployeeID, Username, PasswordHash, Role)
-#             VALUES (?, ?, ?, ?)
-#         ''', (id, username, hashed_pass, role))
+        #get role
+        #this is probably not 1 if we get more information
+        role = cred_row[1]
+        #hash_password
+        hashed_pass = hash_password(password)
+        #insert row
+        cursor.execute('''
+            INSERT INTO Users (employeeID, username, passwordHash, role)
+            VALUES (?, ?, ?, ?)
+        ''', (id, username, hashed_pass, role))
 
-#         # 3. Commit the transaction
-#         conn.commit()
+        # 3. Commit the transaction
+        conn.commit()
 
-#         # 4. Close the connection
-#         cursor.close()
-#         conn.close()
+        # 4. Close the connection
+        cursor.close()
+        conn.close()
