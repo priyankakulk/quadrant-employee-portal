@@ -116,3 +116,4 @@ def update_ticket_status(Id: int):
 
     cred_row = cursor.fetchone()
     role = cred_row
+
