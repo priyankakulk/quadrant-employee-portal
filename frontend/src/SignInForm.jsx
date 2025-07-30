@@ -5,7 +5,7 @@ import logo from './Images/quadrant-logo-1.png';
 
 
 function SignInForm() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
@@ -13,7 +13,7 @@ function SignInForm() {
     e.preventDefault();
     setError("");
 
-    if (!email || !password) {
+    if (!username || !password) {
       setError("Please enter both email and password.");
       return;
     }

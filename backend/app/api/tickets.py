@@ -113,13 +113,17 @@ def update_ticket_status(TicketId: int, newStatus: str):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT role
-        FROM Employees
-        WHERE employeeId = ?
-    """, Id)
+        SELECT ticket_status
+        FROM HRTickets
+        WHERE ticketNumber = ?
+    """, TicketId)
     
     cred_row = cursor.fetchone()
-    role = cred_row
+    if not cred_row:
+        return {"error": "User already exists"}
+    
 
-def update_ticket_status(newHandler: str):
-    cur
+def update_ticket_handler(newHandler: str, TicketNum: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+    
