@@ -27,7 +27,7 @@ def get_tickets(user: Optional[int] = Query(None),
     filters = {
         "employeeID = ?": user,
         "severity = ?": severity,
-        "status = ?": status,
+        "ticket_status = ?": status,
         "startDate >= ?": from_date,
         "startDate <= ?": to_date
     }
@@ -73,11 +73,11 @@ def add_ticket(user: int,
             # Generate next ticket_id
             cursor.execute("SELECT MAX(ticketNumber) FROM HRTickets")
             max_id = cursor.fetchone()[0]
-            new_ticket_id = (max_id or 0) + 1
+            new_ticket_id = (max_id if max_id is not None else 0) + 1
 
             # Insert new ticket
             cursor.execute("""
-                INSERT INTO HRTickets (ticketNumber, employeeId, severity, status, startDate, message)
+                INSERT INTO HRTickets (ticketNumber, employeeId, severity, ticket_status, startDate, message)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (
                 new_ticket_id,
