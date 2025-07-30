@@ -34,7 +34,7 @@ def get_subordinates(EID: int):
         query = """
             SELECT e.employeeId, e.firstName, e.lastName, e.workEmail
             FROM employeesHierarchy h
-            JOIN employees e ON h.descendant = e.employeeId
+            JOIN Employees e ON h.descendant = e.employeeId
             WHERE h.ancestor = ? AND h.depth > 0
             ORDER BY h.depth ASC;
         """

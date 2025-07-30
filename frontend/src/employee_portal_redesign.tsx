@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import
+import LeaveApplication  from './leave-application';
 import { 
   FileText, 
   Clock, 
@@ -21,11 +23,32 @@ import {
 
 export default function EmployeePortal() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const navigate = useNavigate(); // Add this hook
+
+  // Add navigation handler
+  const handleQuickLinkClick = (title) => {
+    if (title === "Leave Application") {
+      navigate('/leave-application');
+    }
+    // Add other navigation cases as needed
+     else if (title === "Feedback") {
+       navigate('/feedback-form');
+     }
+     else if (title === "Career Portal") {
+       navigate('/job-applications');
+     }
+      else if (title === "Induction") {
+       navigate('/induction-modules');
+     }
+     else if (title === "Timesheet") {
+       navigate('/timesheet');
+     }
+  };
 
   const navigationItems = [
     'Home', 'My Work', 'Teams', 'More Apps'
   ];
-
+  
   const quickLinkButtons = [
     {
       icon: <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">JI</div>,
@@ -206,7 +229,10 @@ export default function EmployeePortal() {
               <div className="grid grid-cols-4 gap-4">
                 {quickLinkButtons.map((button, index) => (
                   <div key={index} className="text-center">
-                    <div className="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg cursor-pointer transition-colors duration-200 border h-20 flex flex-col items-center justify-center">
+                    <div 
+                      className="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg cursor-pointer transition-colors duration-200 border h-20 flex flex-col items-center justify-center"
+                      onClick={() => handleQuickLinkClick(button.title)}
+                    >
                       <div className="flex justify-center mb-1">
                         {button.icon}
                       </div>
