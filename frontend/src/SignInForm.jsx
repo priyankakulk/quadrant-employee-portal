@@ -19,11 +19,16 @@ function SignInForm() {
     }
 
     // Example validation logic
-    if (email === "admin@quadrant.com" && password === "password123") {
-      alert("Successfully signed in!");
-    } else {
-      setError("Invalid email or password.");
-    }
+    fetch(`http://localhost:8000/api/employees?username=${username}&password=${password}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Fetched employees:", data);
+        //save ID and role
+        //use role to display correct page
+      })
+      .catch((error) => {
+        console.error("Error fetching employees:", error);
+      });
   };
 
 return(
