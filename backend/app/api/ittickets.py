@@ -1,59 +1,110 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query
 from app.services.connect import get_connection
+from fastapi.responses import JSONResponse
 from typing import Optional
+from datetime import date
 
 router = APIRouter()
 
-@router.get("/ittickets")
-def get_tickets(
+# ✅ GET tickets with filters
+@router.get("/it-tickets")
+def get_it_tickets(
     user: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
     handled_by: Optional[int] = Query(None),
-    ticket_number: Optional[str] = Query(None)
+    ticket_number: Optional[int] = Query(None)
+):
+    query = "SELECT * FROM ITTickets WHERE 1=1"
+    params = []
+
+    filters = {
+        "employeeId = ?": user,
+        "status = ?": status,
+        "handled_by = ?": handled_by,
+        "ticket_number = ?": ticket_number
+    }
+
+    for clause, value in filters.items():
+        if value is not None:
+            query += f" AND {clause}"
+            params.append(value)
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        cursor.close()
+
+    results = [
+        {
+            "ticket_number": row.ticket_number,
+            "employeeId": row.employeeId,
+            "status": row.status,
+            "message": row.message,
+            "handled_by": row.handled_by
+        }
+        for row in rows
+    ]
+    return results
+
+# ✅ POST new IT ticket
+@router.post("/it-tickets")
+def create_it_ticket(
+    user: int,
+    message: str
 ):
     try:
-        query = """
-            SELECT *
-            FROM ITTickets
-            WHERE 1=1
-        """
-        params = []
+        with get_connection() as conn:
+            cursor = conn.cursor()
 
-        filters = {
-            "employeeId = ?": user,
-            "Status = ?": status,
-            "HandledBy = ?": handled_by,
-            "ticketNumber = ?": ticket_number
-        }
+            # Generate new ticket number
+            cursor.execute("SELECT MAX(ticket_number) FROM ITTickets")
+            max_ticket = cursor.fetchone()[0]
+            new_ticket_number = (max_ticket or 0) + 1
 
-        for clause, value in filters.items():
-            if value is not None:
-                query += f" AND {clause}"
-                params.append(value)
+            # Insert ticket
+            cursor.execute("""
+                INSERT INTO ITTickets (ticket_number, employeeId, status, message)
+                VALUES (?, ?, ?, ?)
+            """, (
+                new_ticket_number,
+                user,
+                "pending",  # default status
+                message
+            ))
+
+            conn.commit()
+            cursor.close()
+
+        return JSONResponse(status_code=201, content={
+            "message": "Ticket created successfully.",
+            "ticket_number": new_ticket_number
+        })
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# ✅ PUT update ticket status
+@router.put("/it-tickets/status")
+def update_ticket_status(ticket_number: int, new_status: str):
+    try:
+        if new_status not in ["pending", "completed", "not completed"]:
+            return JSONResponse(status_code=400, content={"error": "Invalid status value."})
 
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(query, params)
-            rows = cursor.fetchall()
 
-        results = [
-            {
-                "ticket_number": row.ticketNumber,
-                "work_email": row.workEmail,
-                "first_name": row.firstName,
-                "last_name": row.lastName,
-                "message": row.message,
-                "status": row.Status,
-                "employee_id": row.employeeId,
-                "handled_by": row.HandledBy
-            }
-            for row in rows
-        ]
+            cursor.execute("""
+                UPDATE ITTickets
+                SET status = ?
+                WHERE ticket_number = ?
+            """, (new_status, ticket_number))
 
-        cursor.close()
-        conn.close()
-        return results
+            if cursor.rowcount == 0:
+                return JSONResponse(status_code=404, content={"error": "Ticket not found."})
 
+            conn.commit()
+            cursor.close()
+
+        return {"message": f"Ticket #{ticket_number} status updated to '{new_status}'."}
     except Exception as e:
-        # Return the detailed error in the response
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}") 
+        return JSONResponse(status_code=500, content={"error": str(e)})

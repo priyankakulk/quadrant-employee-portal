@@ -16,9 +16,10 @@ app.add_middleware(
 # Include feature routers
 app.include_router(employees.router, prefix="/api")
 app.include_router(tickets.router, prefix="/api")
-app.include_router(onboarding.router, prefix="/api")
-app.include_router(WHO.router, prefix="/api")
-#app.include_router(ittickets.router, prefix="/api")
+app.include_router(leaveapplications.router, prefix="/api")  # ✅ ADD THIS LINE
+app.include_router(induction.router, prefix="/api")
+app.include_router(ittickets.router, prefix="/api")
+app.include_router(troubleshootingDocs.roter, prefix="/api")
 # app.include_router(training.router, prefix="/api")
 # app.include_router(leaveapplications.router, prefix="/api")
-# >>>>>>> a1d18acbd0d9aab01cd1e3d4b16700ff18a4116f
+
