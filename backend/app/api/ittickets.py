@@ -2,15 +2,15 @@ from fastapi import APIRouter, Query
 from app.services.connect import get_connection
 from fastapi.responses import JSONResponse
 from typing import Optional
-from datetime import date
 
 router = APIRouter()
 
-# ✅ GET tickets with filters
 @router.get("/it-tickets")
 def get_it_tickets(
     user: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
+    status: Optional[str] = Query(
+        None, description="Filter by status (e.g. Not Completed, Pending, Completed)"
+    ),
     handled_by: Optional[int] = Query(None),
     ticket_number: Optional[int] = Query(None)
 ):
@@ -47,7 +47,7 @@ def get_it_tickets(
     ]
     return results
 
-# ✅ POST new IT ticket
+
 @router.post("/it-tickets")
 def create_it_ticket(
     user: int,
@@ -62,14 +62,14 @@ def create_it_ticket(
             max_ticket = cursor.fetchone()[0]
             new_ticket_number = (max_ticket or 0) + 1
 
-            # Insert ticket
+            # Insert ticket with default status "Not Completed"
             cursor.execute("""
                 INSERT INTO ITTickets (ticket_number, employeeId, status, message)
                 VALUES (?, ?, ?, ?)
             """, (
                 new_ticket_number,
                 user,
-                "pending",  # default status
+                "Not Completed",
                 message
             ))
 
@@ -83,11 +83,12 @@ def create_it_ticket(
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# ✅ PUT update ticket status
+
 @router.put("/it-tickets/status")
 def update_ticket_status(ticket_number: int, new_status: str):
     try:
-        if new_status not in ["pending", "completed", "not completed"]:
+        valid_statuses = ["Not Completed", "Pending", "Completed"]
+        if new_status not in valid_statuses:
             return JSONResponse(status_code=400, content={"error": "Invalid status value."})
 
         with get_connection() as conn:
