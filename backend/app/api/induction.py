@@ -1,173 +1,172 @@
-from fastapi import FastAPI, APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
-from sqlalchemy.orm import relationship, sessionmaker, Session, declarative_base
-from typing import List, Optional
-import shutil, os
+from typing import List
+import os, shutil
+import pyodbc
 from uuid import uuid4
+from app.services.connect import get_connection
 
-router = APIRouter()
+router= APIRouter()
 
-# === Config ===
-DATABASE_URL = "sqlite:///./modules.db"  # Replace with actual SQL Server URL if needed
+# === Configuration ===
 UPLOAD_FOLDER = "induction_uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# === FastAPI Setup ===
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+# app.add_middleware(
+#    CORSMiddleware,
+#   allow_origins=["http://localhost:3000"],
+#    allow_credentials=True,
+ #   allow_methods=["*"],
+ #   allow_headers=["*"],
+#)
+
 app.mount("/induction_uploads", StaticFiles(directory=UPLOAD_FOLDER), name="induction_uploads")
 
-# === Database Setup ===
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-Base = declarative_base()
+# == HR Module Management
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# === ORM Models ===
-class InductionModule(Base):
-    __tablename__ = "induction_modules"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(String, nullable=False)
-    description = Column(String)
-    target_role = Column(String, nullable=False)
-    files = relationship("InductionFile", back_populates="module", cascade="all, delete")
-
-class InductionFile(Base):
-    __tablename__ = "induction_files"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    filename = Column(String, nullable=False)
-    content = Column(String, nullable=True)  # For text-based files
-    module_id = Column(Integer, ForeignKey("induction_modules.id", ondelete="CASCADE"))
-    module = relationship("InductionModule", back_populates="files")
-
-# Base.metadata.create_all(bind=engine)  # Only run once to create tables
-
-# === API Router ===
-router = APIRouter(prefix="/induction", tags=["Induction"])
-
-# === Read-only module views for each role ===
-@router.get("/hr/modules")
-def view_hr_modules(db: Session = Depends(get_db)):
-    return get_modules_by_role("HR", db)
-
-@router.get("/it/modules")
-def view_it_modules(db: Session = Depends(get_db)):
-    return get_modules_by_role("IT", db)
-
-@router.get("/employee/modules")
-def view_employee_modules(db: Session = Depends(get_db)):
-    return get_modules_by_role("Employee", db)
-
-def get_modules_by_role(role: str, db: Session):
-    modules = db.query(InductionModule).filter_by(target_role=role).all()
-    return [
-        {
-            "id": m.id,
-            "title": m.title,
-            "description": m.description,
-            "files": [
-                {"id": f.id, "filename": f.filename, "is_text": bool(f.content)}
-                for f in m.files
-            ]
-        }
-        for m in modules
-    ]
-
-# === HR: Admin Panel Routes ===
+# Create a new induction module for HR to manage
 @router.post("/hr/manage/modules")
-def create_module_admin(title: str = Form(...), description: str = Form(""), target_role: str = Form(...), db: Session = Depends(get_db)):
+def create_module_admin(title: str = Form(...), description: str = Form(""), target_role: str = Form(...)):
     if target_role not in ["HR", "IT", "Employee"]:
-        raise HTTPException(400, detail="Invalid role")
-    module = InductionModule(title=title, description=description, target_role=target_role)
-    db.add(module)
-    db.commit()
-    db.refresh(module)
-    return {"message": "Module created", "id": module.id}
+        raise HTTPException(400, detail="Invalid target role")
+    with get_connection() as conn:
+        cursor = conn.cursor()
 
-@router.put("/hr/manage/modules/{module_id}")
-def update_module(module_id: int, title: str = Form(...), description: str = Form(...), target_role: str = Form(...), db: Session = Depends(get_db)):
-    module = db.query(InductionModule).filter_by(id=module_id).first()
-    if not module:
-        raise HTTPException(404, detail="Module not found")
-    module.title = title
-    module.description = description
-    module.target_role = target_role
-    db.commit()
-    return {"message": "Module updated"}
+        # Check for duplicate module title
+        cursor.execute("SELECT COUNT(*) FROM induction_modules WHERE title = ?", (title,))
+        if cursor.fetchone()[0] > 0:
+            raise HTTPException(400, detail="Module title already exists")
 
-@router.delete("/hr/manage/modules/{module_id}")
-def delete_module(module_id: int, db: Session = Depends(get_db)):
-    module = db.query(InductionModule).filter_by(id=module_id).first()
-    if not module:
-        raise HTTPException(404, detail="Module not found")
-    for file in module.files:
-        if file.filename and not file.content:
-            try:
-                os.remove(os.path.join(UPLOAD_FOLDER, file.filename))
-            except FileNotFoundError:
-                pass
-    db.delete(module)
-    db.commit()
-    return {"message": "Module deleted"}
+        cursor.execute("""
+            INSERT INTO induction_modules (title, description, target_role)
+            VALUES (?, ?, ?)
+        """, (title, description, target_role))
+        conn.commit()
+        cursor.execute("SELECT SCOPE_IDENTITY()")
+        module_id = cursor.fetchone()[0]
+    return {"message": "Module created", "id": module_id}
 
-# === File Actions ===
+
+# HR uploading a file into a module
 @router.post("/hr/manage/modules/{module_id}/upload-file")
-def upload_file(module_id: int, file: UploadFile = File(...), db: Session = Depends(get_db)):
+def upload_file(module_id: int, file: UploadFile = File(...)):
     filename = f"{uuid4()}_{file.filename}"
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    db.add(InductionFile(filename=filename, module_id=module_id))
-    db.commit()
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO induction_files (filename, module_id)
+            VALUES (?, ?)
+        """, (filename, module_id))
+        conn.commit()
     return {"message": "File uploaded"}
 
+# Create a text-based file directly within the app interface
 @router.post("/hr/manage/modules/{module_id}/text-file")
-def create_text_file(module_id: int, filename: str = Form(...), content: str = Form(...), db: Session = Depends(get_db)):
-    db.add(InductionFile(filename=filename, content=content, module_id=module_id))
-    db.commit()
+def create_text_file(module_id: int, filename: str = Form(...), content: str = Form(...)):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM induction_modules WHERE id = ?", (module_id,))
+        if not cursor.fetchone():
+            raise HTTPException(404, detail="Module not found")
+
+        # Check for duplicate filename in the same module
+        cursor.execute("""
+            SELECT COUNT(*) FROM induction_files WHERE filename = ? AND module_id = ?
+        """, (filename, module_id))
+        if cursor.fetchone()[0] > 0:
+            raise HTTPException(400, detail="File title already exists in this module")
+
+        cursor.execute("""
+            INSERT INTO induction_files (filename, module_id, content)
+            VALUES (?, ?, ?)
+        """, (filename, module_id, content))
+        conn.commit()
     return {"message": "Text file created"}
 
-@router.put("/hr/manage/files/{file_id}")
-def update_text_file(file_id: int, filename: str = Form(...), content: str = Form(...), db: Session = Depends(get_db)):
-    file = db.query(InductionFile).filter_by(id=file_id).first()
-    if not file:
-        raise HTTPException(404, detail="File not found")
-    file.filename = filename
-    file.content = content
-    db.commit()
+#example for react code: The user will click a button to create a file and then submit the content through the form and then submit to add the file
+#<form action="/induction/hr/manage/modules/1/text-file" method="POST">
+#  <input type="text" name="filename" placeholder="Enter file name" required />
+#  <textarea name="content" placeholder="Enter text content here..." rows="10" required></textarea>
+#  <button type="submit">Create File</button>
+#</form>
+
+# Update an existing induction module's metadata
+@router.post("/hr/manage/modules/{module_id}")
+def update_module(module_id: int, title: str = Form(...), description: str = Form(...), target_role: str = Form(...)):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE induction_modules SET title = ?, description = ?, target_role = ?
+            WHERE id = ?
+        """, (title, description, target_role, module_id))
+        conn.commit()
+    return {"message": "Module updated"}
+
+# Edit a text-based file created in the system
+@router.put("/hr/manage/files/{file_id}/edit")
+def edit_text_file(file_id: int, new_content: str = Form(...)):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE induction_files SET content = ? WHERE id = ?", (new_content, file_id))
+        if cursor.rowcount == 0:
+            raise HTTPException(404, detail="File not found or not editable")
+        conn.commit()
     return {"message": "File updated"}
 
-@router.delete("/hr/manage/files/{file_id}")
-def delete_file(file_id: int, db: Session = Depends(get_db)):
-    file = db.query(InductionFile).filter_by(id=file_id).first()
-    if not file:
-        raise HTTPException(404, detail="File not found")
-    if file.filename and not file.content:
-        try:
-            os.remove(os.path.join(UPLOAD_FOLDER, file.filename))
-        except FileNotFoundError:
-            pass
-    db.delete(file)
-    db.commit()
-    return {"message": "File deleted"}
 
-# === File Read Routes ===
-@router.get("/files/{filename}")
+# Delete an induction module and its associated files
+@router.delete("/hr/manage/modules/{module_id}")
+def delete_module(module_id: int):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT filename FROM induction_files WHERE module_id = ?", (module_id,))
+        for (filename,) in cursor.fetchall():
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            if os.path.exists(filepath):
+                os.remove(filepath)
+        cursor.execute("DELETE FROM induction_modules WHERE id = ?", (module_id,))
+        conn.commit()
+    return {"message": "Module and files deleted"}
+
+# === HR View Only ===
+@router.get("/hr/modules")
+def view_hr_modules():
+    return get_modules_by_role("HR")
+
+# === IT & Employee View ===
+@router.get("/it/modules")
+def view_it_modules():
+    return get_modules_by_role("IT")
+
+# getting the employee induction modules
+@router.get("/employee/modules")
+def view_employee_modules():
+    return get_modules_by_role("Employee")
+
+# Helper method to fetch all modules for a given role
+def get_modules_by_role(role: str):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, title, description FROM induction_modules WHERE target_role = ?", (role,))
+        modules = cursor.fetchall()
+        module_data = []
+        for module in modules:
+            module_id, title, desc = module
+            cursor.execute("SELECT id, filename FROM induction_files WHERE module_id = ?", (module_id,))
+            files = [{"id": fid, "filename": fname} for fid, fname in cursor.fetchall()]
+            module_data.append({"id": module_id, "title": title, "description": desc, "files": files})
+        return module_data
+
+# === File Access ===
+@router.get("/files/download/{filename}")
 def download_file(filename: str):
     path = os.path.join(UPLOAD_FOLDER, filename)
     if not os.path.exists(path):
@@ -175,11 +174,14 @@ def download_file(filename: str):
     return FileResponse(path, media_type="application/octet-stream", filename=filename)
 
 @router.get("/files/text/{file_id}")
-def read_text_file(file_id: int, db: Session = Depends(get_db)):
-    file = db.query(InductionFile).filter_by(id=file_id).first()
-    if not file or not file.content:
-        raise HTTPException(404, detail="Text file not found")
-    return {"filename": file.filename, "content": file.content}
+def read_text_file(file_id: int):
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT content FROM induction_files WHERE id = ?", (file_id,))
+        result = cursor.fetchone()
+        if not result or not result[0]:
+            raise HTTPException(404, detail="Text content not found")
+        return {"content": result[0]}
 
-# === Register Router ===
+# === Mount Router ===
 app.include_router(router)
