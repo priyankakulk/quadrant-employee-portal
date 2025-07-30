@@ -3,6 +3,7 @@ from app.services.connect import get_connection
 from typing import Optional
 from datetime import date
 from fastapi.responses import JSONResponse
+import traceback
 
 router = APIRouter()
 
@@ -70,13 +71,13 @@ def add_ticket(user: int,
             cursor = conn.cursor()
 
             # Generate next ticket_id
-            cursor.execute("SELECT MAX(ticketNumber) FROM Tickets")
+            cursor.execute("SELECT MAX(ticketNumber) FROM HRTickets")
             max_id = cursor.fetchone()[0]
             new_ticket_id = (max_id or 0) + 1
 
             # Insert new ticket
             cursor.execute("""
-                INSERT INTO Tickets (ticketNumber, employeeId, severity, status, startDate, message)
+                INSERT INTO HRTickets (ticketNumber, employeeId, severity, status, startDate, message)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (
                 new_ticket_id,
@@ -94,25 +95,31 @@ def add_ticket(user: int,
             "ticket_id": new_ticket_id
         })
     except Exception as e:
+        print("".join(traceback.format_exception(None, e, e.__traceback__)))
         return JSONResponse(status_code=500, content={"error": str(e)})
     
-def who_can_handle_tickets():
-    #code here
-    with get_connection as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT * FROM Employees WHERE role = HR
-                       """)
-    #then find a way to format with columns to return information
+# def who_can_handle_tickets():
+#     #code here
+#     with get_connection as conn:
+#         cursor = conn.cursor()
+#         cursor.execute("""
+#             SELECT * FROM Employees WHERE role = HR
+#                        """)
+#     #then find a way to format with columns to return information
 
-def update_ticket_status(Id: int):
+@router.get("/updateHRTickets")
+def update_ticket_status(TicketId: int, newStatus: str):
     #code here
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT role
         FROM Employees
         WHERE employeeId = ?
     """, Id)
-
+    
     cred_row = cursor.fetchone()
     role = cred_row
+
+def update_ticket_status(newHandler: str):
+    cur

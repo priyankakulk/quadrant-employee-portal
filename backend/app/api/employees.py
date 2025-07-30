@@ -126,9 +126,9 @@ def register_employee(id: int, username: str, password: str):
         hashed_pass = hash_password(password)
         #insert row
         cursor.execute('''
-            INSERT INTO Users (employeeID, username, passwordHash, role)
+            INSERT INTO Users (employeeID, username, passwordHash, role, unhashed_password)
             VALUES (?, ?, ?, ?)
-        ''', (id, username, hashed_pass, role))
+        ''', (id, username, hashed_pass, role, password))
 
         # 3. Commit the transaction
         conn.commit()
