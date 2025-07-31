@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import employees, ittickets, tickets, leaveapplications, induction, troubleshootingDocs#, #training, feedback
+from app.api import employees, ittickets, tickets, leaveapplications, induction, troubleshootingDocs, summary #, #training, feedback
 
 app = FastAPI()
 
@@ -19,6 +19,7 @@ app.include_router(tickets.router, prefix="/api")
 app.include_router(leaveapplications.router, prefix="/api")
 app.include_router(induction.router, prefix="/api")
 app.include_router(ittickets.router, prefix="/api")
+app.include_router(summary.router, prefix="/api")
 #app.include_router(feedback.router, prefix="/api"))
 app.include_router(troubleshootingDocs.router, prefix="/api")
 # app.include_router(training.router, prefix="/api")
