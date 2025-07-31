@@ -19,15 +19,15 @@ function SignInForm() {
     }
 
     // Example validation logic
-    //fetch(`http://localhost:8000/api/employees?username=${username}&password=${password}`)
-      //.then((res) => res.json())
+   // fetch(`http://localhost:8000/api/employees?username=${username}&password=${password}`)
+    //  .then((res) => res.json())
       //.then((data) => {
         //console.log("Fetched employees:", data);
         //save ID and role
         //use role to display correct page
-      //})
+     // })
       //.catch((error) => {
-        //console.error("Error fetching employees:", error);
+       // console.error("Error fetching employees:", error);
       //});
   };
 
