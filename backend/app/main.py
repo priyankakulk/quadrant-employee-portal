@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import employees, ittickets, tickets#, #training, leaveapplications, feedback
+from app.api import employees, ittickets, tickets, leaveapplications, induction, troubleshootingDocs#, #training, feedback
 
 app = FastAPI()
 
