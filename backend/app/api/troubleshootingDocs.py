@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Form, HTTPException, Query
+'''from fastapi import FastAPI, APIRouter, Form, HTTPException, Query
 from typing import List, Optional
 import pyodbc
 from app.services.connect import get_connection
@@ -102,4 +102,4 @@ def get_troubleshooting_document(doc_id: int):
         }
 
 app = FastAPI()
-app.include_router(router)
+app.include_router(router)'''
