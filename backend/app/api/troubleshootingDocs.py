@@ -3,7 +3,7 @@ from typing import List, Optional
 import pyodbc
 from app.services.connect import get_connection
 
-router = APIrouter()
+router = APIRouter()
 
 # Create a troubleshooting document (form submission)
 @router.post("/it/troubleshooting/create")
@@ -41,7 +41,6 @@ def create_troubleshooting_document(
 
     return {
         "message": "Troubleshooting document created",
-        "id": doc_id,
         "ticket_number": ticket_number
     }
 
