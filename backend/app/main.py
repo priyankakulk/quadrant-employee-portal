@@ -22,7 +22,7 @@ app.include_router(onboarding.router, prefix = "/api")
 ##app.include_router(induction.router, prefix="/api")
 #app.include_router(ittickets.router, prefix="/api")
 ##app.include_router(feedback.router, prefix="/api"))
-app.include_router(troubleshootingDocs.router, prefix="/api")
+#app.include_router(troubleshootingDocs.router, prefix="/api")
 # app.include_router(training.router, prefix="/api")
 # app.include_router(leaveapplications.router, prefix="/api")
 
