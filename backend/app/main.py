@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import employees, tickets, onboarding, ittickets, WHO #, #training, leaveapplications, feedback
+<<<<<<< HEAD
+=======
+from app.api import employees, tickets, onboarding, ittickets, WHO , leaveapplications, induction, troubleshootingDocs, summary #, #training, feedback
+>>>>>>> 79e3963f5bc3aba2bacb62802aa676affa7c87ea
 
 app = FastAPI()
 
@@ -15,8 +18,10 @@ app.add_middleware(
 
 # Include feature routers
 app.include_router(employees.router, prefix="/api")
+
+app.include_router(summary.router, prefix="/api")
 app.include_router(tickets.router, prefix="/api")
-#app.include_router(WHO.router, prefix = "/api")
+app.include_router(WHO.router, prefix = "/api")
 app.include_router(onboarding.router, prefix = "/api")
 #app.include_router(leaveapplications.router, prefix="/api")  # ✅ ADD THIS LINE
 ##app.include_router(induction.router, prefix="/api")
