@@ -109,21 +109,68 @@ def add_ticket(user: int,
 
 @router.get("/updateHRTickets")
 def update_ticket_status(TicketId: int, newStatus: str):
-    #code here
     conn = get_connection()
     cursor = conn.cursor()
+    
+    # Check if the ticket exists
     cursor.execute("""
         SELECT ticket_status
         FROM HRTickets
         WHERE ticketNumber = ?
-    """, TicketId)
+    """, (TicketId,))
     
     cred_row = cursor.fetchone()
     if not cred_row:
-        return {"error": "User already exists"}
+        return {"error": "Ticket not found"}
+
+    # Update the ticket status
+    cursor.execute("""
+        UPDATE HRTickets
+        SET ticket_status = ?
+        WHERE ticketNumber = ?
+    """, (newStatus, TicketId))
+
+    conn.commit()
+    conn.close()
+
+    return {"message": f"Ticket {TicketId} updated successfully to status '{newStatus}'"}
     
 
-def update_ticket_handler(newHandler: str, TicketNum: int):
+def update_ticket_handler(newHandler: int, TicketNum: int):
     conn = get_connection()
     cursor = conn.cursor()
+
+    # Check if the new handler exists and has the 'HR' role
+    cursor.execute("""
+        SELECT role
+        FROM Employees
+        WHERE id = ?
+    """, (newHandler,))
+    
+    employee = cursor.fetchone()
+
+    if not employee:
+        conn.close()
+        return {"error": "Employee not found"}
+
+    if employee[0] != "HR":
+        conn.close()
+        return {"error": "Employee does not have HR role"}
+
+    # Update the handledBy column for the given ticket
+    cursor.execute("""
+        UPDATE HRTickets
+        SET handledBy = ?
+        WHERE ticketNumber = ?
+    """, (newHandler, TicketNum))
+
+    if cursor.rowcount == 0:
+        conn.close()
+        return {"error": "Ticket not found"}
+
+    conn.commit()
+    conn.close()
+
+    return {"message": f"Ticket {TicketNum} is now handled by employee {newHandler}"}
+
     

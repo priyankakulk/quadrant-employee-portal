@@ -21,7 +21,7 @@ router = APIRouter()
 @router.get("/employees")
 def get_employee_by_username(username: Optional[str] = Query(None), password: Optional[str] = Query(None)):
     #hashAll()
-    print("hello", username)
+    #print("hello", username)
     if(username):
         with get_connection() as conn:
             cursor = conn.cursor()
@@ -36,7 +36,7 @@ def get_employee_by_username(username: Optional[str] = Query(None), password: Op
                 return {"error": "User not found"}
             
             hashed_pw = cred_row[2]
-            print(hashed_pw)
+            #print(hashed_pw)
             employee_id = cred_row[0]
             if not bcrypt.checkpw(password.encode(), hashed_pw.encode()):   
             # if hashed_pw != password:
