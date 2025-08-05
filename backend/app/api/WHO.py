@@ -13,7 +13,7 @@ def get_superiors(EID: int):
         FROM employeesHierarchy h
         JOIN Employees e ON h.ancestor = e.employeeId
         WHERE h.descendant = ? AND h.depth > 0
-        ORDER BY h.depth ASC;
+        ORDER BY h.depth DESC;
     """
     with get_connection() as conn:
         cursor = conn.cursor()

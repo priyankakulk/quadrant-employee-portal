@@ -10,16 +10,16 @@ export default function ProfilePage() {
   const [error, setError] = useState(null);
   
   // This should be dynamic based on the current user
-  const currentEmployeeId = 94381; // Replace with actual employee ID
+  const currentEmployeeId = 314982; // Replace with actual employee ID
   const currentEmployee = {
-    firstName: "John",
-    lastName: "Smith",
+    firstName: "Emily",
+    lastName: "Johnson",
     role: "IT Developer",
     email: "jsmith@quadranttechnologies.com"
   };
 
   // API base URL - adjust this to match your FastAPI server
-  const API_BASE_URL = `http://localhost:8000/api/superiors?EID=${currentEmployeeId}`;
+  const API_BASE_URL = `http://localhost:8000/api`;
   fetch(API_BASE_URL)
     .then(response => {
       if(!response.ok){
