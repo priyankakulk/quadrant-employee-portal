@@ -11,7 +11,6 @@ import JobListings from './job-applications.tsx';
 import FeedbackForm from './feedback-form.tsx';
 import TimesheetForm  from './timesheet.tsx';
 import EmployeeInductionModules from './induction-modules.tsx';
-import LeaveApplication from './leave-application.tsx';
 import AdminPortal from './admin-portal.tsx';
 import AssetManagementTable from './admin-asset-management.tsx';
 import reportWebVitals from './reportWebVitals';
