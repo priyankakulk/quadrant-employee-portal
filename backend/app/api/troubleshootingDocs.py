@@ -1,9 +1,9 @@
-from fastapi import FastAPI, APIRouter, Form, HTTPException, Query
+'''from fastapi import FastAPI, APIRouter, Form, HTTPException, Query
 from typing import List, Optional
 import pyodbc
 from app.services.connect import get_connection
 
-router = APIrouter()
+router = APIRouter()
 
 # Create a troubleshooting document (form submission)
 @router.post("/it/troubleshooting/create")
@@ -41,7 +41,6 @@ def create_troubleshooting_document(
 
     return {
         "message": "Troubleshooting document created",
-        "id": doc_id,
         "ticket_number": ticket_number
     }
 
@@ -102,4 +101,4 @@ def get_troubleshooting_document(doc_id: int):
         }
 
 app = FastAPI()
-app.include_router(router)
+app.include_router(router)'''

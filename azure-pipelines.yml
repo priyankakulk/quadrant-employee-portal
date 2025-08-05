@@ -1,0 +1,64 @@
+trigger:
+  - main  # Runs on commits to main branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Build
+    displayName: "Build Frontend and Backend"
+    jobs:
+      - job: build_all
+        displayName: "Build Full Project"
+        steps:
+          # Install Node.js for frontend
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '18.x'
+            displayName: 'Install Node.js'
+
+          # Install Python for backend
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+            displayName: 'Use Python 3.11'
+
+          # Build frontend
+          - script: |
+              cd frontend
+              npm install
+              npm run build
+              cd ..
+            displayName: 'Build Frontend'
+
+          # Setup backend
+          - script: |
+              cd backend
+              pip install -r requirements.txt
+              cd ..
+            displayName: 'Install Backend Dependencies'
+
+          # Copy everything into a deployment folder
+          - script: |
+              mkdir package
+              cp -r frontend/dist package/frontend
+              cp -r backend package/backend
+            displayName: 'Prepare Deployment Package'
+
+          # Zip the deployment folder
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: 'package'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/output.zip'
+              replaceExistingArchive: true
+            displayName: 'Archive Build Output'
+
+          # Publish the zipped artifact
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'  # IMPORTANT: used in release pipeline
+              publishLocation: 'Container'
+            displayName: 'Publish Artifact'

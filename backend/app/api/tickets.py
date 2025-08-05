@@ -3,6 +3,7 @@ from app.services.connect import get_connection
 from typing import Optional
 from datetime import date
 from fastapi.responses import JSONResponse
+import traceback
 
 router = APIRouter()
 
@@ -24,11 +25,11 @@ def get_tickets(user: Optional[int] = Query(None),
 
     # Map query params to SQL column names and operators
     filters = {
-        "EmployeeID = ?": user,
-        "Severity = ?": severity,
-        "Status = ?": status,
-        "CreatedDate >= ?": from_date,
-        "CreatedDate <= ?": to_date
+        "employeeID = ?": user,
+        "severity = ?": severity,
+        "ticket_status = ?": status,
+        "startDate >= ?": from_date,
+        "startDate <= ?": to_date
     }
 
      #for every clause and value, if the value exists (filter is there)
@@ -46,11 +47,11 @@ def get_tickets(user: Optional[int] = Query(None),
     #formats the results
     results = [
             {
-                "ticketNumber": row.TicketID,
-                "employeeId": row.EmployeeID,
-                "severity": row.Severity,
-                "status": row.Status,
-                "startDate": row.CreatedDate,
+                "ticketNumber": row.ticketNumber,
+                "employeeId": row.employeeId,
+                "severity": row.severity,
+                "status": row.status,
+                "startDate": row.startDate,
             }
             for row in rows
         ]
@@ -70,13 +71,13 @@ def add_ticket(user: int,
             cursor = conn.cursor()
 
             # Generate next ticket_id
-            cursor.execute("SELECT MAX(ticketNumber) FROM Tickets")
+            cursor.execute("SELECT MAX(ticketNumber) FROM HRTickets")
             max_id = cursor.fetchone()[0]
-            new_ticket_id = (max_id or 0) + 1
+            new_ticket_id = (max_id if max_id is not None else 0) + 1
 
             # Insert new ticket
             cursor.execute("""
-                INSERT INTO Tickets (ticketNumber, employeeId, severity, status, startDate, message)
+                INSERT INTO HRTickets (ticketNumber, employeeId, severity, ticket_status, startDate, message)
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (
                 new_ticket_id,
@@ -94,26 +95,82 @@ def add_ticket(user: int,
             "ticket_id": new_ticket_id
         })
     except Exception as e:
+        print("".join(traceback.format_exception(None, e, e.__traceback__)))
         return JSONResponse(status_code=500, content={"error": str(e)})
     
-def who_can_handle_tickets():
-    #code here
-    with get_connection as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT * FROM Employees WHERE role = HR
-                       """)
-    #then find a way to format with columns to return information
+# def who_can_handle_tickets():
+#     #code here
+#     with get_connection as conn:
+#         cursor = conn.cursor()
+#         cursor.execute("""
+#             SELECT * FROM Employees WHERE role = HR
+#                        """)
+#     #then find a way to format with columns to return information
 
-def update_ticket_status(Id: int):
-    #code here
+@router.get("/updateHRTickets")
+def update_ticket_status(TicketId: int, newStatus: str):
+    conn = get_connection()
     cursor = conn.cursor()
+    
+    # Check if the ticket exists
+    cursor.execute("""
+        SELECT ticket_status
+        FROM HRTickets
+        WHERE ticketNumber = ?
+    """, (TicketId,))
+    
+    cred_row = cursor.fetchone()
+    if not cred_row:
+        return {"error": "Ticket not found"}
+
+    # Update the ticket status
+    cursor.execute("""
+        UPDATE HRTickets
+        SET ticket_status = ?
+        WHERE ticketNumber = ?
+    """, (newStatus, TicketId))
+
+    conn.commit()
+    conn.close()
+
+    return {"message": f"Ticket {TicketId} updated successfully to status '{newStatus}'"}
+    
+
+def update_ticket_handler(newHandler: int, TicketNum: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Check if the new handler exists and has the 'HR' role
     cursor.execute("""
         SELECT role
         FROM Employees
-        WHERE EmployeeId = ?
-    """, Id)
+        WHERE id = ?
+    """, (newHandler,))
+    
+    employee = cursor.fetchone()
 
-    cred_row = cursor.fetchone()
-    role = cred_row
+    if not employee:
+        conn.close()
+        return {"error": "Employee not found"}
 
+    if employee[0] != "HR":
+        conn.close()
+        return {"error": "Employee does not have HR role"}
+
+    # Update the handledBy column for the given ticket
+    cursor.execute("""
+        UPDATE HRTickets
+        SET handledBy = ?
+        WHERE ticketNumber = ?
+    """, (newHandler, TicketNum))
+
+    if cursor.rowcount == 0:
+        conn.close()
+        return {"error": "Ticket not found"}
+
+    conn.commit()
+    conn.close()
+
+    return {"message": f"Ticket {TicketNum} is now handled by employee {newHandler}"}
+
+    
