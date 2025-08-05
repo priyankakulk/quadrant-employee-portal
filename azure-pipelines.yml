@@ -1,37 +1,64 @@
-# Python package
-# Create and test a Python package on multiple Python versions.
-# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
-
 trigger:
-- main
+  - main  # Runs on commits to main branch
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
 
-strategy:
-  matrix:
-    Python38:
-      python.version: '3.8'
-    Python39:
-      python.version: '3.9'
-    Python310:
-      python.version: '3.10'
-    Python311:
-      python.version: '3.11'
+stages:
+  - stage: Build
+    displayName: "Build Frontend and Backend"
+    jobs:
+      - job: build_all
+        displayName: "Build Full Project"
+        steps:
+          # Install Node.js for frontend
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '18.x'
+            displayName: 'Install Node.js'
 
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
+          # Install Python for backend
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+            displayName: 'Use Python 3.11'
 
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
+          # Build frontend
+          - script: |
+              cd frontend
+              npm install
+              npm run build
+              cd ..
+            displayName: 'Build Frontend'
 
-- script: |
-    pip install pytest pytest-azurepipelines
-    pytest
-  displayName: 'pytest'
+          # Setup backend
+          - script: |
+              cd backend
+              pip install -r requirements.txt
+              cd ..
+            displayName: 'Install Backend Dependencies'
+
+          # Copy everything into a deployment folder
+          - script: |
+              mkdir package
+              cp -r frontend/dist package/frontend
+              cp -r backend package/backend
+            displayName: 'Prepare Deployment Package'
+
+          # Zip the deployment folder
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: 'package'
+              includeRootFolder: false
+              archiveType: 'zip'
+              archiveFile: '$(Build.ArtifactStagingDirectory)/output.zip'
+              replaceExistingArchive: true
+            displayName: 'Archive Build Output'
+
+          # Publish the zipped artifact
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'  # IMPORTANT: used in release pipeline
+              publishLocation: 'Container'
+            displayName: 'Publish Artifact'
