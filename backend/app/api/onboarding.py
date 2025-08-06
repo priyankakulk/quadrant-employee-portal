@@ -11,9 +11,10 @@ router = APIRouter()
 @router.get("/onboard")
 def onboard_user(firstName: str,
     lastName: str,
+    email: str,
     role: str,
     gender: str,
-    worksFor: Optional[int] = Query(None)
+    reportsTo: Optional[int] = Query(None)
 ):
     try:
         with get_connection() as conn:
@@ -26,9 +27,9 @@ def onboard_user(firstName: str,
 
             # Insert new employee
             cursor.execute("""
-                INSERT INTO Employees (employeeId, firstName, lastName, role, gender, worksFor)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (new_id, firstName, lastName, role, gender, worksFor))
+                INSERT INTO Employees (employeeId, firstName, lastName, role, gender, reportsTo, workEmail)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (new_id, firstName, lastName, role, gender, reportsTo, email))
 
             conn.commit()
 

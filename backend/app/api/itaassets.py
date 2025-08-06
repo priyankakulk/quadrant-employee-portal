@@ -65,6 +65,46 @@ def update_assignment_status(assignment_id: str, status_update: StatusUpdate):
         print(f"Error updating status: {e}")
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+@router.patch("/assignments/{assignment_id}/status")
+def update_assignment_status(assignment_id: int, status_update: StatusUpdate):
+    """Update the status of an assignment"""
+    print(f"Received request to update assignment {assignment_id} to status: {status_update.status}")
+    
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # First check if assignment exists
+            cursor.execute("SELECT assignment_id FROM AssetAssignments WHERE assignment_id = ?", (assignment_id,))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=404, detail="Assignment not found")
+            
+            # Update the status based on the new status
+            if status_update.status == "Returned":
+                # Set returned_on to current date
+                cursor.execute("""
+                    UPDATE AssetAssignments 
+                    SET returned_on = ? 
+                    WHERE assignment_id = ?
+                """, (datetime.now().date(), assignment_id))
+            else:
+                # Clear returned_on if status is not returned
+                cursor.execute("""
+                    UPDATE AssetAssignments 
+                    SET returned_on = NULL 
+                    WHERE assignment_id = ?
+                """, (assignment_id,))
+            
+            conn.commit()
+            cursor.close()
+        
+        print(f"Successfully updated assignment {assignment_id} to status: {status_update.status}")
+        return {"message": "Status updated successfully", "assignment_id": assignment_id, "new_status": status_update.status}
+    
+    except Exception as e:
+        print(f"Error updating status: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
 @router.get("/assets", response_model=List[Asset])
 def get_assets():
     with get_connection() as conn:
@@ -138,7 +178,10 @@ def get_assignment(assignment_id: str):
             returned_on=row[6],
             status=status
         )
+<<<<<<< HEAD
 
+=======
+>>>>>>> 837ffeaf9e115c68ad32184864c1fee30bf6a38b
 @router.get("/test")
 def test_endpoint():
     """Simple test endpoint to verify the API is working"""
@@ -147,4 +190,8 @@ def test_endpoint():
 @router.post("/test-status")
 def test_status_update(status_update: StatusUpdate):
     """Test endpoint to verify StatusUpdate model parsing"""
+<<<<<<< HEAD
     return {"received_status": status_update.status, "type": type(status_update.status).__name__}
+=======
+    return {"received_status": status_update.status, "type": type(status_update.status).__name__}
+>>>>>>> 837ffeaf9e115c68ad32184864c1fee30bf6a38b

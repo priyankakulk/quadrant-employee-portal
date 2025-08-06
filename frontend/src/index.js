@@ -11,13 +11,15 @@ import JobListings from './job-applications.tsx';
 import FeedbackForm from './feedback-form.tsx';
 import TimesheetForm  from './timesheet.tsx';
 import EmployeeInductionModules from './induction-modules.tsx';
+import AdminPortal from './admin-portal.tsx';
+import AssetManagementTable from './admin-asset-management.tsx';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <BrowserRouter>
     <Routes>
-      <Route path="/" element={<App />} />
+      <Route path="/" element={<SignInForm />} />
       <Route path="/portal" element={<EmployeePortal />} />
       <Route path="/signin" element={<SignInForm />} />
       <Route path="/leave-application" element={<LeaveApplication />} />
@@ -26,6 +28,8 @@ root.render(
       <Route path="/feedback-form" element={<FeedbackForm />} />
       <Route path="/induction-modules" element={<EmployeeInductionModules />} />
       <Route path="/timesheet" element={<TimesheetForm />} />
-    </Routes>
+      <Route path="/admin-portal" element={<AdminPortal />} />
+      <Route path="/asset-management-table" element={<AssetManagementTable />} />
+      </Routes>
   </BrowserRouter>
 );

@@ -1,10 +1,15 @@
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SignInForm from './SignInForm'; // or './SignInForm.jsx'
+import ProfilePage from './profile-page.tsx'; // this is your portal
 
 function App() {
   return (
-        <div className="bg-green-300 h-screen text-white flex items-center justify-center">
-      <h1 className="text-3xl font-bold">Hello, world!</h1>
-    </div>
-
+    <Router>
+      <Routes>
+        <Route path="/" element={<SignInForm />} />
+        <Route path="/portal" element={<ProfilePage />} />
+      </Routes>
+    </Router>
   );
 }
 
