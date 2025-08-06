@@ -1,5 +1,5 @@
 trigger:
-  - main  # Runs on commits to main branch
+  - main
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -8,57 +8,87 @@ stages:
   - stage: Build
     displayName: "Build Frontend and Backend"
     jobs:
-      - job: build_all
-        displayName: "Build Full Project"
+      - job: frontend
+        displayName: "Build Frontend"
         steps:
-          # Install Node.js for frontend
+          - checkout: self
+            clean: true  # ⬅️ Ensures fresh copy from GitHub
+
           - task: NodeTool@0
             inputs:
               versionSpec: '18.x'
-            displayName: 'Install Node.js'
 
-          # Install Python for backend
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '3.11'
-            displayName: 'Use Python 3.11'
-
-          # Build frontend
           - script: |
               cd frontend
               npm install
               npm run build
-              cd ..
-            displayName: 'Build Frontend'
+            displayName: 'Install & Build Frontend'
 
-          # Setup backend
+          - script: |
+              cd frontend/build
+              zip -r ../../frontend.zip .
+            displayName: 'Zip Frontend Build Output'
+
+          - task: PublishBuildArtifacts@1
+            inputs:
+              pathToPublish: 'frontend.zip'
+              artifactName: 'Frontend'
+              publishLocation: 'Container'
+
+      - job: backend
+        displayName: "Build Backend"
+        steps:
+          - checkout: self
+            clean: true  # ⬅️ Ensures fresh copy from GitHub
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+
           - script: |
               cd backend
               pip install -r requirements.txt
-              cd ..
-            displayName: 'Install Backend Dependencies'
+              zip -r ../backend.zip .
+            displayName: 'Install & Zip Backend Code'
 
-          # Copy everything into a deployment folder
-          - script: |
-              mkdir package
-              cp -r frontend/dist package/frontend
-              cp -r backend package/backend
-            displayName: 'Prepare Deployment Package'
-
-          # Zip the deployment folder
-          - task: ArchiveFiles@2
-            inputs:
-              rootFolderOrFile: 'package'
-              includeRootFolder: false
-              archiveType: 'zip'
-              archiveFile: '$(Build.ArtifactStagingDirectory)/output.zip'
-              replaceExistingArchive: true
-            displayName: 'Archive Build Output'
-
-          # Publish the zipped artifact
           - task: PublishBuildArtifacts@1
             inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-              ArtifactName: 'drop'  # IMPORTANT: used in release pipeline
+              pathToPublish: 'backend.zip'
+              artifactName: 'Backend'
               publishLocation: 'Container'
-            displayName: 'Publish Artifact'
+
+  - stage: Deploy
+    displayName: "Deploy Frontend and Backend"
+    dependsOn: Build
+    jobs:
+      - job: deploy_frontend
+        displayName: "Deploy Frontend to App Service"
+        steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'Frontend'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'AzureConnection'
+              appName: 'gateway-app'  # 🌐 Frontend App Service
+              package: '$(System.ArtifactsDirectory)/Frontend/frontend.zip'
+
+      - job: deploy_backend
+        displayName: "Deploy Backend to App Service"
+        steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'Backend'
+              downloadPath: '$(System.ArtifactsDirectory)'
+
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'AzureConnection'
+              appName: 'gateway-backend-api'  # 🔌 Backend App Service
+              package: '$(System.ArtifactsDirectory)/Backend/backend.zip'
