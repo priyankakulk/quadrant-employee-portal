@@ -64,34 +64,4 @@ stages:
     displayName: "Deploy Frontend and Backend"
     dependsOn: Build
     jobs:
-      - job: deploy_frontend
-        displayName: "Deploy Frontend to App Service"
-        steps:
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'Frontend'
-              downloadPath: '$(System.ArtifactsDirectory)'
-
-          - task: AzureWebApp@1
-            inputs:
-              azureSubscription: 'AzureConnection'
-              appName: 'gateway-app'  # Frontend App Service
-              package: '$(System.ArtifactsDirectory)/Frontend/frontend.zip'
-
-      - job: deploy_backend
-        displayName: "Deploy Backend to App Service"
-        steps:
-          - task: DownloadBuildArtifacts@0
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'Backend'
-              downloadPath: '$(System.ArtifactsDirectory)'
-
-          - task: AzureWebApp@1
-            inputs:
-              azureSubscription: 'AzureConnection'
-              appName: 'gateway-backend-api'  # Backend App Service
-              package: '$(System.ArtifactsDirectory)/Backend/backend.zip'
+      - job: de
