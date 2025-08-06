@@ -10,7 +10,7 @@ class Assignment(BaseModel):
     assigned_on: date
     due_date: date
     returned_on: Optional[date] = None
-    status: from pydantic import BaseModel
+    #status: from pydantic import BaseModel
 from typing import Optional
 from datetime import date
 

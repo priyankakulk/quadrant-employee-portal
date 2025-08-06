@@ -178,10 +178,6 @@ def get_assignment(assignment_id: str):
             returned_on=row[6],
             status=status
         )
-<<<<<<< HEAD
-
-=======
->>>>>>> 837ffeaf9e115c68ad32184864c1fee30bf6a38b
 @router.get("/test")
 def test_endpoint():
     """Simple test endpoint to verify the API is working"""
@@ -190,8 +186,4 @@ def test_endpoint():
 @router.post("/test-status")
 def test_status_update(status_update: StatusUpdate):
     """Test endpoint to verify StatusUpdate model parsing"""
-<<<<<<< HEAD
     return {"received_status": status_update.status, "type": type(status_update.status).__name__}
-=======
-    return {"received_status": status_update.status, "type": type(status_update.status).__name__}
->>>>>>> 837ffeaf9e115c68ad32184864c1fee30bf6a38b

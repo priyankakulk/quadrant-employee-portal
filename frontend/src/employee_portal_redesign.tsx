@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
-import LeaveApplication  from './leave-application';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   Clock, 
@@ -18,114 +16,243 @@ import {
   ChevronRight,
   MapPin,
   Users,
-  Briefcase
+  Briefcase,
+  LogOut,
+  Home,
+  Layers,
+  MoreHorizontal,
+  Mail,
+  Phone
 } from 'lucide-react';
 
 export default function EmployeePortal() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const navigate = useNavigate(); // Add this hook
+  const [userInfo, setUserInfo] = useState({
+    id: '',
+    name: '',
+    email: '',
+    role: '',
+    avatar: ''
+  });
+  const [showLogin, setShowLogin] = useState(false);
+  const [activeTab, setActiveTab] = useState('Home');
+  const [notifications, setNotifications] = useState([]);
 
-  // Add navigation handler
-  const handleQuickLinkClick = (title) => {
-    if (title === "Leave Application") {
-      navigate('/leave-application');
+
+  // Load user information from localStorage on component mount
+  useEffect(() => {
+    try {
+      // Get user data from localStorage (set by sign-in page)
+      const userId = localStorage.getItem('userId');
+      const userName = localStorage.getItem('userName');
+      const userEmail = localStorage.getItem('userEmail');
+      const userRole = localStorage.getItem('userRole');
+
+      console.log('Loading user data from localStorage:', { userId, userName, userEmail, userRole });
+
+      if (!userId || !userName) {
+        console.log('No user data found, redirecting to login');
+        setShowLogin(true);
+        return;
+      }
+
+      setUserInfo({
+        id: userId,
+        name: userName,
+        email: userEmail,
+        role: userRole || 'Employee',
+        avatar: ''
+      });
+    } catch (error) {
+      console.error('Error loading user data from localStorage:', error);
+      setShowLogin(true);
     }
-    // Add other navigation cases as needed
-     else if (title === "Feedback") {
-       navigate('/feedback-form');
-     }
-     else if (title === "Career Portal") {
-       navigate('/job-applications');
-     }
-      else if (title === "Induction") {
-       navigate('/induction-modules');
-     }
-     else if (title === "Timesheet") {
-       navigate('/timesheet');
-     }
+  }, []);
+
+  // Update current date every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDate(new Date());
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+
+
+  // Handle logout
+  const handleLogout = () => {
+    try {
+      // Clear all user data from localStorage (same keys as sign-in page)
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userRole');
+      
+      console.log('User logged out, localStorage cleared');
+      
+      setShowLogin(true);
+      setUserInfo({ id: '', name: '', email: '', role: '', avatar: '' });
+      setActiveTab('Home');
+
+      // Redirect to sign-in page
+      window.location.href = '/signin'; // Adjust path as needed
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
+
+
+  // Navigation handler for quick links
+  const handleQuickLinkClick = (title) => {
+    // In real implementation, use React Router:
+    // const routes = {
+    //   "Leave Application": '/leave-application',
+    //   "Feedback": '/feedback-form',
+    //   "Career Portal": '/job-applications',
+    //   "Induction": '/induction-modules',
+    //   "Timesheet": '/timesheet',
+    //   "Ticketing": '/ticketing'
+    // };
+    // if (routes[title]) {
+    //   navigate(routes[title]);
+    // }
+    
+    console.log(`Navigating to ${title}...`);
+    // For demo, just show an alert
+    alert(`Opening ${title} module...`);
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = (name) => {
+    if (!name) return 'U';
+    const names = name.split(' ');
+    return names.length > 1 
+      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+      : names[0].substring(0, 2).toUpperCase();
+  };
+
+  // Get personalized greeting based on time
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  };
+
+  // Format date
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+
+
   const navigationItems = [
-    'Home', 'My Work', 'Teams', 'More Apps'
+    { name: 'Home', icon: Home },
+    { name: 'My Work', icon: Briefcase },
+    { name: 'Teams', icon: Users },
+    { name: 'More Apps', icon: MoreHorizontal }
   ];
   
   const quickLinkButtons = [
     {
-      icon: <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">JI</div>,
+      icon: <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">LA</div>,
       title: "Leave Application",
-      bgColor: "bg-white"
+      bgColor: "bg-white",
+      description: "Apply for time off"
     },
     {
-      icon: <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white text-xs font-bold">HS</div>,
+      icon: <Clock className="w-6 h-6 text-orange-500" />,
       title: "Timesheet",
-      bgColor: "bg-white"
+      bgColor: "bg-white",
+      description: "Log your hours"
     },
     {
-      icon: <div className="w-8 h-8 bg-blue-400 rounded flex items-center justify-center text-white text-xs font-bold">BB</div>,
+      icon: <User className="w-6 h-6 text-blue-400" />,
       title: "Induction",
-      bgColor: "bg-white"
+      bgColor: "bg-white",
+      description: "Training modules"
     },
     {
-      icon: <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">AT</div>,
+      icon: <Briefcase className="w-6 h-6 text-green-600" />,
       title: "Career Portal",
-      bgColor: "bg-white"
+      bgColor: "bg-white",
+      description: "Job opportunities"
     },
     {
-      icon: <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">PS</div>,
+      icon: <Ticket className="w-6 h-6 text-red-500" />,
       title: "Ticketing",
-      bgColor: "bg-white"
+      bgColor: "bg-white",
+      description: "IT support requests"
     },
     {
       icon: <MessageSquare className="w-6 h-6 text-blue-600" />,
       title: "Feedback",
-      bgColor: "bg-white"
+      bgColor: "bg-white",
+      description: "Share your thoughts"
     }
   ];
 
   const surveys = [
     {
+      id: 1,
       title: "Employee Satisfaction",
       category: "General",
       daysRemaining: 15,
       description: "Help us improve workplace culture by sharing your feedback on current policies and work environment.",
-      icon: "👥"
+      icon: "👥",
+      progress: 0
     },
     {
+      id: 2,
       title: "IT Infrastructure Review",
-      category: "Technology",
+      category: "Technology", 
       daysRemaining: 8,
       description: "Evaluate our current IT systems and suggest improvements for better productivity.",
-      icon: "💻"
+      icon: "💻",
+      progress: 0
     }
   ];
 
   const events = [
     {
+      id: 1,
       date: "15",
       month: "Dec",
       title: "Annual Company Meeting",
       time: "Mon, 15 Dec • 10:00 AM",
-      location: "Main Conference Hall"
+      location: "Main Conference Hall",
+      type: "meeting"
     },
     {
-      date: "22",
+      id: 2,
+      date: "22", 
       month: "Dec",
       title: "Team Building Event",
       time: "Mon, 22 Dec • 2:00 PM",
-      location: "Outdoor Activity Center"
+      location: "Outdoor Activity Center",
+      type: "event"
     }
   ];
 
   const holidays = [
     {
+      id: 1,
       date: "25",
       month: "Dec",
       title: "Christmas Day",
       subtitle: "25 December 2024 / Wednesday"
     },
     {
+      id: 2,
       date: "01",
-      month: "Jan",
+      month: "Jan", 
       title: "New Year's Day",
       subtitle: "01 January 2025 / Wednesday"
     }
@@ -133,136 +260,225 @@ export default function EmployeePortal() {
 
   const colleagues = [
     {
+      id: 1,
       name: "Sarah Johnson",
       role: "Product Manager",
       email: "sarah.johnson@company.com",
-      avatar: "SJ"
+      avatar: "SJ",
+      status: "online"
     },
     {
-      name: "David Chen",
+      id: 2,
+      name: "David Chen", 
       role: "Engineering Lead",
       email: "david.chen@company.com",
-      avatar: "DC"
+      avatar: "DC",
+      status: "busy"
+    },
+    {
+      id: 3,
+      name: "Maria Garcia",
+      role: "UI/UX Designer", 
+      email: "maria.garcia@company.com",
+      avatar: "MG",
+      status: "away"
     }
   ];
 
+
+
+  // Login redirect message for when not authenticated
+  if (showLogin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
+          <Diamond className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
+          <p className="text-gray-600 mb-6">
+            You need to sign in to access the employee portal.
+          </p>
+          <button
+            onClick={() => window.location.href = '/signin'} // Adjust path as needed
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
+          >
+            Go to Sign In
+          </button>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Please use your company credentials to sign in.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Main portal interface
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header Navigation */}
-      <header className="bg-blue-700 shadow-sm">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            {/* Logo */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo and Navigation */}
             <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-3">
-                <Diamond className="w-6 h-6 text-white" />
-                <span className="text-lg font-semibold text-white">Quadrant Technologies</span>
+              <div className="flex items-center">
+                <Diamond className="w-8 h-8 text-blue-600 mr-2" />
+                <span className="text-xl font-bold text-gray-900">Portal</span>
               </div>
               
-              {/* Navigation Links */}
-              <nav className="hidden md:flex space-x-6">
-                {navigationItems.map((item, index) => (
-                  <a
-                    key={index}
-                    href="#"
-                    className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                      item === 'Home' 
-                        ? 'text-white border-b-2 border-white' 
-                        : 'text-blue-100 hover:text-white'
-                    }`}
-                  >
-                    {item}
-                  </a>
-                ))}
+              <nav className="hidden md:flex space-x-8">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => setActiveTab(item.name)}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        activeTab === item.name
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.name}</span>
+                    </button>
+                  );
+                })}
               </nav>
             </div>
-            
-            {/* Right Side */}
+
+            {/* Search and User Menu */}
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search this site"
-                  className="pl-10 pr-4 py-2 bg-blue-600 text-white placeholder-blue-200 border border-blue-500 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                  placeholder="Search..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
                 />
               </div>
-              <Bell className="w-5 h-5 text-blue-100 hover:text-white cursor-pointer" />
-              <span className="text-blue-100 text-sm font-medium">PEOPLE ONE</span>
+              
+              {/* Notifications - Simplified */}
+              <div className="relative">
+                <button className="p-2 text-gray-400 hover:text-gray-500 relative">
+                  <Bell className="w-6 h-6" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white rounded-full text-xs flex items-center justify-center">
+                    2
+                  </span>
+                </button>
+              </div>
+
+              {/* User Menu */}
+              <div className="relative flex items-center space-x-3">
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-900">{userInfo.name}</div>
+                  <div className="text-xs text-gray-500">{userInfo.role}</div>
+                </div>
+                <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                  {getUserInitials(userInfo.name)}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="p-2 text-gray-400 hover:text-gray-500"
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Main Content Area */}
-        <div className="flex-1 p-6">
-          {/* Announcement Banner */}
-          <div className="bg-blue-600 text-white p-4 rounded-lg mb-6 flex items-center">
-            <div className="w-6 h-6 bg-white bg-opacity-20 rounded mr-3 flex items-center justify-center">
-              <Bell className="w-4 h-4" />
-            </div>
-            <span className="text-sm">15 Jan 2025 - We are expanding to a new "Business Location"</span>
-          </div>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {getGreeting()}, {userInfo.name.split(' ')[0]}!
+          </h1>
+          <p className="text-gray-600">
+            {formatDate(currentDate)} • Employee ID: {userInfo.id} • Role: {userInfo.role}
+          </p>
+        </div>
 
-          {/* Hero Section with Image */}
-          <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
-            <div className="relative">
-              <div className="h-64 bg-gradient-to-r from-gray-800 to-gray-600 flex items-center justify-center">
-                <div className="text-center text-white p-8">
-                  <h1 className="text-3xl font-bold mb-4">Welcome, Jane Doe!</h1>
-                  <p className="text-lg opacity-90">Your central hub for all workplace resources and tools</p>
+        {/* Quick Links */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Access</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {quickLinkButtons.map((link, index) => (
+              <button
+                key={index}
+                onClick={() => handleQuickLinkClick(link.title)}
+                className={`${link.bgColor} p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 text-center group`}
+              >
+                <div className="flex justify-center mb-2">
+                  {link.icon}
                 </div>
-              </div>
-              <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
-                Portal Q1 updates - Enhanced features and better user experience
-              </div>
-            </div>
+                <div className="text-sm font-medium text-gray-900 mb-1">
+                  {link.title}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {link.description}
+                </div>
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Quick Links */}
-          <div className="bg-white rounded-lg shadow-sm mb-6">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-lg font-semibold">Quick Links</h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-4 gap-4">
-                {quickLinkButtons.map((button, index) => (
-                  <div key={index} className="text-center">
-                    <div 
-                      className="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg cursor-pointer transition-colors duration-200 border h-20 flex flex-col items-center justify-center"
-                      onClick={() => handleQuickLinkClick(button.title)}
-                    >
-                      <div className="flex justify-center mb-1">
-                        {button.icon}
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Pending Surveys */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Pending Surveys</h3>
+              <div className="space-y-4">
+                {surveys.map((survey) => (
+                  <div key={survey.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{survey.icon}</span>
+                        <div>
+                          <h4 className="font-medium text-gray-900">{survey.title}</h4>
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                            {survey.category}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-xs text-gray-600 font-medium leading-tight text-center">{button.title}</span>
+                      <span className="text-sm text-red-600 font-medium">
+                        {survey.daysRemaining} days left
+                      </span>
                     </div>
+                    <p className="text-sm text-gray-600 mb-3">{survey.description}</p>
+                    <button 
+                      onClick={() => handleQuickLinkClick(`Survey: ${survey.title}`)}
+                      className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                    >
+                      Take Survey →
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Bottom Sections Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Events */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-                <h3 className="text-lg font-semibold">Upcoming Events</h3>
-              </div>
-              <div className="p-6 space-y-4">
-                {events.map((event, index) => (
-                  <div key={index} className="flex space-x-4">
-                    <div className="bg-blue-600 text-white text-center rounded p-2 min-w-[60px]">
-                      <div className="text-xl font-bold">{event.date}</div>
-                      <div className="text-xs">{event.month}</div>
+            {/* Upcoming Events */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Events</h3>
+              <div className="space-y-4">
+                {events.map((event) => (
+                  <div key={event.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{event.date}</div>
+                      <div className="text-xs text-gray-500 uppercase">{event.month}</div>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{event.title}</h4>
-                      <p className="text-sm text-gray-500">{event.time}</p>
-                      <div className="flex items-center text-xs text-gray-400 mt-1">
-                        <MapPin className="w-3 h-3 mr-1" />
+                      <h4 className="font-medium text-gray-900">{event.title}</h4>
+                      <div className="flex items-center text-sm text-gray-600 mt-1">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        {event.time}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 mr-1" />
                         {event.location}
                       </div>
                     </div>
@@ -270,135 +486,55 @@ export default function EmployeePortal() {
                 ))}
               </div>
             </div>
+          </div>
 
+          {/* Right Column */}
+          <div className="space-y-6">
             {/* Holidays */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-                <h3 className="text-lg font-semibold">Holidays</h3>
-              </div>
-              <div className="p-6 space-y-4">
-                {holidays.map((holiday, index) => (
-                  <div key={index} className="flex space-x-4">
-                    <div className="bg-red-500 text-white text-center rounded p-2 min-w-[60px]">
-                      <div className="text-xl font-bold">{holiday.date}</div>
-                      <div className="text-xs">{holiday.month}</div>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{holiday.title}</h4>
-                      <p className="text-sm text-gray-500">{holiday.subtitle}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Sidebar */}
-        <div className="w-96 p-6 space-y-6">
-          {/* Surveys */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-lg font-semibold">Surveys</h3>
-            </div>
-            <div className="p-6 space-y-4">
-              {surveys.map((survey, index) => (
-                <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
-                  <div className="flex items-start space-x-3">
-                    <div className="text-2xl">{survey.icon}</div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{survey.title}</h4>
-                      <p className="text-sm text-blue-600 font-medium">{survey.category}</p>
-                      <p className="text-xs text-gray-500 mt-1">📅 {survey.daysRemaining} days Remaining</p>
-                      <p className="text-sm text-gray-600 mt-2">{survey.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Company Calendar */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Company Calendar</h2>
-                <div className="flex items-center space-x-2">
-                  <button className="p-1 hover:bg-blue-500 rounded">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm font-medium">December 2024</span>
-                  <button className="p-1 hover:bg-blue-500 rounded">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-7 gap-1 mb-4">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
-                    {day}
-                  </div>
-                ))}
-              </div>
-              
-              <div className="grid grid-cols-7 gap-1">
-                {[...Array(35)].map((_, i) => {
-                  const day = i - 6; // Adjust for first week
-                  const isCurrentMonth = day > 0 && day <= 31;
-                  const isToday = day === 15;
-                  const hasEvent = [15, 22, 25].includes(day);
-                  
-                  return (
-                    <div
-                      key={i}
-                      className={`p-2 text-center text-sm h-10 flex items-center justify-center relative ${
-                        isCurrentMonth 
-                          ? isToday 
-                            ? 'bg-blue-600 text-white rounded-full' 
-                            : hasEvent 
-                              ? 'bg-blue-100 text-blue-800 rounded-full font-medium cursor-pointer hover:bg-blue-200' 
-                              : 'text-gray-900 hover:bg-gray-100 rounded-full cursor-pointer'
-                          : 'text-gray-300'
-                      }`}
-                    >
-                      {isCurrentMonth ? day : ''}
-                      {hasEvent && !isToday && (
-                        <div className="absolute bottom-1 w-1 h-1 bg-blue-600 rounded-full"></div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Find My Colleague */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-lg font-semibold">Find My Colleague</h3>
-            </div>
-            <div className="p-6">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search here"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Holidays</h3>
               <div className="space-y-3">
-                {colleagues.map((colleague, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      {colleague.avatar}
+                {holidays.map((holiday) => (
+                  <div key={holiday.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-600">{holiday.date}</div>
+                      <div className="text-xs text-gray-500 uppercase">{holiday.month}</div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 text-sm">{colleague.name}</h4>
-                      <p className="text-xs text-gray-500">{colleague.role}</p>
-                      <p className="text-xs text-gray-400">{colleague.email}</p>
+                    <div>
+                      <h4 className="font-medium text-gray-900">{holiday.title}</h4>
+                      <p className="text-xs text-gray-600">{holiday.subtitle}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Team Directory */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Directory</h3>
+              <div className="space-y-3">
+                {colleagues.map((colleague) => (
+                  <div key={colleague.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                    <div className="relative">
+                      <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                        {colleague.avatar}
+                      </div>
+                      <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                        colleague.status === 'online' ? 'bg-green-400' :
+                        colleague.status === 'busy' ? 'bg-red-400' : 'bg-yellow-400'
+                      }`}></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{colleague.name}</p>
+                      <p className="text-xs text-gray-600 truncate">{colleague.role}</p>
+                    </div>
+                    <div className="flex space-x-1">
+                      <button className="p-1 text-gray-400 hover:text-gray-600">
+                        <Mail className="w-3 h-3" />
+                      </button>
+                      <button className="p-1 text-gray-400 hover:text-gray-600">
+                        <Phone className="w-3 h-3" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -406,7 +542,7 @@ export default function EmployeePortal() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
