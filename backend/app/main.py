@@ -4,16 +4,18 @@ from app.api import employees, ittickets, tickets, WHO, onboarding, itaassets #,
 #from app.api import employees, ittickets, WHO, leaveapplications#, #training, leaveapplications, feedback
 
 app = FastAPI()
-
 # CORS config
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_origins = ["https://gateway-app-bcemchh2ahf4htbg.eastus-01.azurewebsites.net"]
+    allow_origins=[
+        "http://localhost:3000",
+        "https://gateway-app-bcemchh2ahf4htbg.eastus-01.azurewebsites.net"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Include feature routers
 app.include_router(employees.router, prefix="/api")
