@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import employees, ittickets, tickets, WHO, onboarding, itaassets #,training, leaveapplications, feedback
 #from app.api import employees, ittickets, WHO, leaveapplications#, #training, leaveapplications, feedback
-
+import uvicorn
 app = FastAPI()
 # CORS config
 app.add_middleware(
@@ -32,3 +32,6 @@ app.include_router(itaassets.router, prefix = "/api")
 # app.include_router(training.router, prefix="/api")
 #app.include_router(leaveapplications.router, prefix="/api")
 
+
+for route in app.routes:
+    print(f"Route: {route.path} Methods: {route.methods}")
