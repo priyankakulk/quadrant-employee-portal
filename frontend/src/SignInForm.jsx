@@ -19,7 +19,7 @@ function SignInForm() {
       return;
     }
   //Example validation logic
-  fetch(`http://localhost:8000/api/employees?username=${username}&password=${password}`)
+  fetch(`https://gateway-backend-api.azurewebsites.net/api/employees?username=${username}&password=${password}`)
   .then((res) => {
     if (!res.ok) {
       throw new Error("Network response was not ok");
