@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Add this import for navigation
 import { 
   FileText, 
   Clock, 
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 
 export default function EmployeePortal() {
+  const navigate = useNavigate(); // Add navigation hook
   const [currentDate, setCurrentDate] = useState(new Date());
   const [userInfo, setUserInfo] = useState({
     id: '',
@@ -38,34 +40,51 @@ export default function EmployeePortal() {
   const [activeTab, setActiveTab] = useState('Home');
   const [notifications, setNotifications] = useState([]);
 
-
-  // Load user information from localStorage on component mount
+  // Load user information on component mount
   useEffect(() => {
     try {
-      // Get user data from localStorage (set by sign-in page)
-      const userId = localStorage.getItem('userId');
-      const userName = localStorage.getItem('userName');
-      const userEmail = localStorage.getItem('userEmail');
-      const userRole = localStorage.getItem('userRole');
+      // Check if we're in a browser environment
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const userId = localStorage.getItem('userId');
+        const userName = localStorage.getItem('userName');
+        const userEmail = localStorage.getItem('userEmail');
+        const userRole = localStorage.getItem('userRole');
 
-      console.log('Loading user data from localStorage:', { userId, userName, userEmail, userRole });
+        console.log('Loading user data from localStorage:', { userId, userName, userEmail, userRole });
 
-      if (!userId || !userName) {
-        console.log('No user data found, redirecting to login');
-        setShowLogin(true);
-        return;
+        if (!userId || !userName) {
+          console.log('No user data found, redirecting to login');
+          setShowLogin(true);
+          return;
+        }
+
+        setUserInfo({
+          id: userId,
+          name: userName,
+          email: userEmail,
+          role: userRole || 'Employee',
+          avatar: ''
+        });
+      } else {
+        // For demo purposes when localStorage isn't available
+        setUserInfo({
+          id: '12345',
+          name: 'Demo User',
+          email: 'demo@company.com',
+          role: 'Employee',
+          avatar: ''
+        });
       }
-
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      // Set demo data for development
       setUserInfo({
-        id: userId,
-        name: userName,
-        email: userEmail,
-        role: userRole || 'Employee',
+        id: '12345',
+        name: 'Demo User', 
+        email: 'demo@company.com',
+        role: 'Employee',
         avatar: ''
       });
-    } catch (error) {
-      console.error('Error loading user data from localStorage:', error);
-      setShowLogin(true);
     }
   }, []);
 
@@ -78,16 +97,15 @@ export default function EmployeePortal() {
     return () => clearInterval(timer);
   }, []);
 
-
-
   // Handle logout
   const handleLogout = () => {
     try {
-      // Clear all user data from localStorage (same keys as sign-in page)
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userRole');
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
+      }
       
       console.log('User logged out, localStorage cleared');
       
@@ -95,33 +113,30 @@ export default function EmployeePortal() {
       setUserInfo({ id: '', name: '', email: '', role: '', avatar: '' });
       setActiveTab('Home');
 
-      // Redirect to sign-in page
-      window.location.href = '/signin'; // Adjust path as needed
+      // Navigate to sign-in page
+      navigate('/signin');
     } catch (error) {
       console.error('Error during logout:', error);
     }
   };
 
-
-
-  // Navigation handler for quick links
+  // Navigation handler for quick links - Updated with React Router
   const handleQuickLinkClick = (title) => {
-    // In real implementation, use React Router:
-    // const routes = {
-    //   "Leave Application": '/leave-application',
-    //   "Feedback": '/feedback-form',
-    //   "Career Portal": '/job-applications',
-    //   "Induction": '/induction-modules',
-    //   "Timesheet": '/timesheet',
-    //   "Ticketing": '/ticketing'
-    // };
-    // if (routes[title]) {
-    //   navigate(routes[title]);
-    // }
+    const routes = {
+      "Leave Application": '/leave-application',
+      "Feedback": '/feedback',
+      "Career Portal": '/career-portal',
+      "Induction": '/induction',
+      "Timesheet": '/timesheet',
+      "Ticketing": '/ticketing'
+    };
     
-    console.log(`Navigating to ${title}...`);
-    // For demo, just show an alert
-    alert(`Opening ${title} module...`);
+    if (routes[title]) {
+      navigate(routes[title]);
+    } else {
+      console.log(`Route not found for ${title}`);
+      alert(`${title} module is coming soon...`);
+    }
   };
 
   // Get user initials for avatar
@@ -150,8 +165,6 @@ export default function EmployeePortal() {
       day: 'numeric'
     });
   };
-
-
 
   const navigationItems = [
     { name: 'Home', icon: Home },
@@ -285,8 +298,6 @@ export default function EmployeePortal() {
     }
   ];
 
-
-
   // Login redirect message for when not authenticated
   if (showLogin) {
     return (
@@ -298,7 +309,7 @@ export default function EmployeePortal() {
             You need to sign in to access the employee portal.
           </p>
           <button
-            onClick={() => window.location.href = '/signin'} // Adjust path as needed
+            onClick={() => navigate('/signin')}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
           >
             Go to Sign In
@@ -320,7 +331,7 @@ export default function EmployeePortal() {
           <div className="flex justify-between items-center h-16">
             {/* Logo and Navigation */}
             <div className="flex items-center space-x-8">
-              <div className="flex items-center">
+              <div className="flex items-center cursor-pointer" onClick={() => navigate('/portal')}>
                 <Diamond className="w-8 h-8 text-blue-600 mr-2" />
                 <span className="text-xl font-bold text-gray-900">Portal</span>
               </div>
@@ -409,7 +420,7 @@ export default function EmployeePortal() {
               <button
                 key={index}
                 onClick={() => handleQuickLinkClick(link.title)}
-                className={`${link.bgColor} p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200 text-center group`}
+                className={`${link.bgColor} p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 text-center group hover:scale-105 transform`}
               >
                 <div className="flex justify-center mb-2">
                   {link.icon}
@@ -452,7 +463,7 @@ export default function EmployeePortal() {
                     <p className="text-sm text-gray-600 mb-3">{survey.description}</p>
                     <button 
                       onClick={() => handleQuickLinkClick(`Survey: ${survey.title}`)}
-                      className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                      className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors"
                     >
                       Take Survey →
                     </button>
@@ -466,7 +477,7 @@ export default function EmployeePortal() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Events</h3>
               <div className="space-y-4">
                 {events.map((event) => (
-                  <div key={event.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg">
+                  <div key={event.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-600">{event.date}</div>
                       <div className="text-xs text-gray-500 uppercase">{event.month}</div>
@@ -495,7 +506,7 @@ export default function EmployeePortal() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Holidays</h3>
               <div className="space-y-3">
                 {holidays.map((holiday) => (
-                  <div key={holiday.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                  <div key={holiday.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded transition-colors">
                     <div className="text-center">
                       <div className="text-lg font-bold text-green-600">{holiday.date}</div>
                       <div className="text-xs text-gray-500 uppercase">{holiday.month}</div>
@@ -514,7 +525,7 @@ export default function EmployeePortal() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Directory</h3>
               <div className="space-y-3">
                 {colleagues.map((colleague) => (
-                  <div key={colleague.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded">
+                  <div key={colleague.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded transition-colors">
                     <div className="relative">
                       <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
                         {colleague.avatar}
@@ -529,10 +540,10 @@ export default function EmployeePortal() {
                       <p className="text-xs text-gray-600 truncate">{colleague.role}</p>
                     </div>
                     <div className="flex space-x-1">
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                         <Mail className="w-3 h-3" />
                       </button>
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
+                      <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
                         <Phone className="w-3 h-3" />
                       </button>
                     </div>

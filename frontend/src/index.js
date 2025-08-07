@@ -14,6 +14,7 @@ import EmployeeInductionModules from './induction-modules.tsx';
 import AdminPortal from './admin-portal.tsx';
 import AssetManagementTable from './admin-asset-management.tsx';
 import reportWebVitals from './reportWebVitals';
+import HRPortal from './hr-portal.tsx';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -30,6 +31,7 @@ root.render(
       <Route path="/timesheet" element={<TimesheetForm />} />
       <Route path="/admin-portal" element={<AdminPortal />} />
       <Route path="/asset-management-table" element={<AssetManagementTable />} />
+      <Route path="/hr-portal" element={<HRPortal />} />
       </Routes>
   </BrowserRouter>
 );

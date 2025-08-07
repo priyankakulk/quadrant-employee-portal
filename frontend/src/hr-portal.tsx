@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
-import LeaveApplication  from './leave-application';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   Clock, 
@@ -18,31 +17,61 @@ import {
   ChevronRight,
   MapPin,
   Users,
-  Briefcase
+  Briefcase,
+  UserPlus,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 
 export default function EmployeePortal() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const navigate = useNavigate(); // Add this hook
+  const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate();
+
+  // Get user information from localStorage
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    const userName = localStorage.getItem('userName');
+    const userRole = localStorage.getItem('userRole');
+    const userEmail = localStorage.getItem('userEmail');
+
+    if (!userId) {
+      // Redirect to login if no session
+      navigate('/');
+      return;
+    }
+
+    setCurrentUser({
+      id: userId,
+      name: userName || 'User',
+      role: userRole || 'Employee',
+      email: userEmail || ''
+    });
+  }, [navigate]);
 
   // Add navigation handler
   const handleQuickLinkClick = (title) => {
     if (title === "Leave Application") {
       navigate('/leave-application');
     }
-    // Add other navigation cases as needed
-     else if (title === "Feedback") {
-       navigate('/feedback-form');
-     }
-     else if (title === "Career Portal") {
-       navigate('/job-applications');
-     }
-      else if (title === "Induction") {
-       navigate('/induction-modules');
-     }
-     else if (title === "Timesheet") {
-       navigate('/timesheet');
-     }
+    else if (title === "Feedback") {
+      navigate('/feedback-form');
+    }
+    else if (title === "Career Portal") {
+      navigate('/job-applications');
+    }
+    else if (title === "Onboarding") {
+      navigate('/onboarding-modules');
+    }
+    else if (title === "Timesheet") {
+      navigate('/timesheet');
+    }
+    else if (title === "Ticketing") {
+      navigate('/ticketing');
+    }
+    else if (title === "Induction") {
+      navigate('/induction-modules');
+    }
   };
 
   const navigationItems = [
@@ -51,39 +80,53 @@ export default function EmployeePortal() {
   
   const quickLinkButtons = [
     {
-      icon: <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">JI</div>,
+      icon: <FileText className="w-6 h-6 text-emerald-600" />,
       title: "Leave Application",
-      bgColor: "bg-white"
+      gradient: "from-emerald-500 to-emerald-600",
+      bgGradient: "from-emerald-50 to-emerald-100",
+      borderColor: "border-emerald-200"
     },
     {
-      icon: <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center text-white text-xs font-bold">HS</div>,
+      icon: <Clock className="w-6 h-6 text-orange-600" />,
       title: "Timesheet",
-      bgColor: "bg-white"
+      gradient: "from-orange-500 to-orange-600",
+      bgGradient: "from-orange-50 to-orange-100",
+      borderColor: "border-orange-200"
     },
     {
-      icon: <div className="w-8 h-8 bg-blue-400 rounded flex items-center justify-center text-white text-xs font-bold">BB</div>,
+      icon: <User className="w-6 h-6 text-purple-600" />,
       title: "Induction",
-      bgColor: "bg-white"
+      gradient: "from-purple-500 to-purple-600",
+      bgGradient: "from-purple-50 to-purple-100",
+      borderColor: "border-purple-200"
     },
     {
-      icon: <div className="w-8 h-8 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">AT</div>,
+      icon: <Briefcase className="w-6 h-6 text-blue-600" />,
       title: "Career Portal",
-      bgColor: "bg-white"
+      gradient: "from-blue-500 to-blue-600",
+      bgGradient: "from-blue-50 to-blue-100",
+      borderColor: "border-blue-200"
     },
     {
-      icon: <div className="w-8 h-8 bg-red-500 rounded flex items-center justify-center text-white text-xs font-bold">PS</div>,
+      icon: <Ticket className="w-6 h-6 text-red-600" />,
       title: "Ticketing",
-      bgColor: "bg-white"
+      gradient: "from-red-500 to-red-600",
+      bgGradient: "from-red-50 to-red-100",
+      borderColor: "border-red-200"
     },
     {
-      icon: <MessageSquare className="w-6 h-6 text-blue-600" />,
+      icon: <MessageSquare className="w-6 h-6 text-cyan-600" />,
       title: "Feedback",
-      bgColor: "bg-white"
+      gradient: "from-cyan-500 to-cyan-600",
+      bgGradient: "from-cyan-50 to-cyan-100",
+      borderColor: "border-cyan-200"
     },
     {
-      icon: <MessageSquare className="w-6 h-6 text-blue-600" />,
-      title: "Feedback",
-      bgColor: "bg-white"
+      icon: <UserPlus className="w-6 h-6 text-indigo-600" />,
+      title: "Onboarding",
+      gradient: "from-indigo-500 to-indigo-600",
+      bgGradient: "from-indigo-50 to-indigo-100",
+      borderColor: "border-indigo-200"
     }
   ];
 
@@ -93,14 +136,16 @@ export default function EmployeePortal() {
       category: "General",
       daysRemaining: 15,
       description: "Help us improve workplace culture by sharing your feedback on current policies and work environment.",
-      icon: "👥"
+      icon: "👥",
+      gradient: "from-emerald-500 to-emerald-600"
     },
     {
       title: "IT Infrastructure Review",
       category: "Technology",
       daysRemaining: 8,
       description: "Evaluate our current IT systems and suggest improvements for better productivity.",
-      icon: "💻"
+      icon: "💻",
+      gradient: "from-purple-500 to-purple-600"
     }
   ];
 
@@ -152,28 +197,48 @@ export default function EmployeePortal() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Floating particles background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute animate-float opacity-10"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 4}s`
+            }}
+          >
+            <Sparkles className="w-4 h-4 text-teal-500" />
+          </div>
+        ))}
+      </div>
+
       {/* Header Navigation */}
-      <header className="bg-blue-700 shadow-sm">
+      <header className="bg-gradient-to-r from-teal-600 to-teal-700 shadow-lg relative z-10">
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center space-x-8">
               <div className="flex items-center space-x-3">
-                <Diamond className="w-6 h-6 text-white" />
-                <span className="text-lg font-semibold text-white">Quadrant Technologies</span>
+                <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                  <Diamond className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-xl font-bold text-white">Quadrant Technologies</span>
               </div>
               
               {/* Navigation Links */}
-              <nav className="hidden md:flex space-x-6">
+              <nav className="hidden md:flex space-x-1">
                 {navigationItems.map((item, index) => (
                   <a
                     key={index}
                     href="#"
-                    className={`px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                       item === 'Home' 
-                        ? 'text-white border-b-2 border-white' 
-                        : 'text-blue-100 hover:text-white'
+                        ? 'text-white bg-white/20 backdrop-blur-sm shadow-lg' 
+                        : 'text-teal-100 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {item}
@@ -185,63 +250,85 @@ export default function EmployeePortal() {
             {/* Right Side */}
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-teal-300" />
                 <input
                   type="text"
                   placeholder="Search this site"
-                  className="pl-10 pr-4 py-2 bg-blue-600 text-white placeholder-blue-200 border border-blue-500 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                  className="pl-10 pr-4 py-2 bg-white/10 text-white placeholder-teal-200 border border-white/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent backdrop-blur-sm"
                 />
               </div>
-              <Bell className="w-5 h-5 text-blue-100 hover:text-white cursor-pointer" />
-              <span className="text-blue-100 text-sm font-medium">PEOPLE ONE</span>
+              <div className="relative">
+                <Bell className="w-5 h-5 text-teal-100 hover:text-white cursor-pointer transition-colors" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+              </div>
+              <span className="text-teal-100 text-sm font-medium">{currentUser?.name?.toUpperCase() || 'USER'}</span>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex relative z-10">
         {/* Main Content Area */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-8">
           {/* Announcement Banner */}
-          <div className="bg-blue-600 text-white p-4 rounded-lg mb-6 flex items-center">
-            <div className="w-6 h-6 bg-white bg-opacity-20 rounded mr-3 flex items-center justify-center">
-              <Bell className="w-4 h-4" />
+          <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white p-6 rounded-2xl mb-8 flex items-center shadow-lg relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-600/50 to-transparent"></div>
+            <div className="w-12 h-12 bg-white/20 rounded-xl mr-4 flex items-center justify-center backdrop-blur-sm relative z-10">
+              <Bell className="w-6 h-6" />
             </div>
-            <span className="text-sm">15 Jan 2025 - We are expanding to a new "Business Location"</span>
+            <div className="relative z-10">
+              <div className="font-semibold mb-1">Latest Update</div>
+              <span className="text-sm opacity-90">15 Jan 2025 - We are expanding to a new "Business Location"</span>
+            </div>
           </div>
 
-          {/* Hero Section with Image */}
-          <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+          {/* Hero Section */}
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl mb-8 overflow-hidden border border-white/20">
             <div className="relative">
-              <div className="h-64 bg-gradient-to-r from-gray-800 to-gray-600 flex items-center justify-center">
-                <div className="text-center text-white p-8">
-                  <h1 className="text-3xl font-bold mb-4">Welcome, Jane Doe!</h1>
-                  <p className="text-lg opacity-90">Your central hub for all workplace resources and tools</p>
+              <div className="h-80 bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-purple-500/20"></div>
+                <div className="text-center text-white p-8 relative z-10">
+                  <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white to-teal-100 bg-clip-text text-transparent">
+                    Welcome, {currentUser?.name || 'User'}!
+                  </h1>
+                  <p className="text-xl opacity-90 max-w-2xl">Your central hub for all workplace resources and tools</p>
+                  <div className="mt-4">
+                    <span className="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm backdrop-blur-sm">
+                      <User className="w-4 h-4 mr-2" />
+                      {currentUser?.role || 'Employee'} • {currentUser?.email || ''}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex items-center justify-center space-x-2">
+                    <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-teal-200">Portal Q1 updates - Enhanced features and better user experience</span>
+                  </div>
                 </div>
-              </div>
-              <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
-                Portal Q1 updates - Enhanced features and better user experience
               </div>
             </div>
           </div>
 
           {/* Quick Links */}
-          <div className="bg-white rounded-lg shadow-sm mb-6">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-lg font-semibold">Quick Links</h3>
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl mb-8 border border-white/20">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-8 py-6 rounded-t-3xl">
+              <h3 className="text-2xl font-bold flex items-center">
+                <div className="w-8 h-8 bg-white/20 rounded-lg mr-3 flex items-center justify-center">
+                  <ArrowRight className="w-4 h-4" />
+                </div>
+                Quick Links
+              </h3>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-4 gap-4">
+            <div className="p-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-6">
                 {quickLinkButtons.map((button, index) => (
-                  <div key={index} className="text-center">
+                  <div key={index} className="text-center group">
                     <div 
-                      className="bg-gray-50 hover:bg-gray-100 p-4 rounded-lg cursor-pointer transition-colors duration-200 border h-20 flex flex-col items-center justify-center"
+                      className={`bg-gradient-to-br ${button.bgGradient} border ${button.borderColor} p-6 rounded-2xl cursor-pointer transition-all duration-300 h-32 flex flex-col items-center justify-center group-hover:shadow-xl group-hover:-translate-y-1 group-hover:scale-105`}
                       onClick={() => handleQuickLinkClick(button.title)}
                     >
-                      <div className="flex justify-center mb-1">
+                      <div className={`w-12 h-12 bg-gradient-to-r ${button.gradient} rounded-xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
                         {button.icon}
                       </div>
-                      <span className="text-xs text-gray-600 font-medium leading-tight text-center">{button.title}</span>
+                      <span className="text-sm font-semibold text-slate-700 leading-tight text-center">{button.title}</span>
                     </div>
                   </div>
                 ))}
@@ -250,23 +337,26 @@ export default function EmployeePortal() {
           </div>
 
           {/* Bottom Sections Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Events */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-                <h3 className="text-lg font-semibold">Upcoming Events</h3>
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
+              <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-8 py-6 rounded-t-3xl">
+                <h3 className="text-xl font-bold flex items-center">
+                  <Calendar className="w-6 h-6 mr-3" />
+                  Upcoming Events
+                </h3>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-8 space-y-6">
                 {events.map((event, index) => (
-                  <div key={index} className="flex space-x-4">
-                    <div className="bg-blue-600 text-white text-center rounded p-2 min-w-[60px]">
-                      <div className="text-xl font-bold">{event.date}</div>
-                      <div className="text-xs">{event.month}</div>
+                  <div key={index} className="flex space-x-4 group">
+                    <div className="bg-gradient-to-r from-teal-500 to-teal-600 text-white text-center rounded-2xl p-4 min-w-[80px] shadow-lg group-hover:shadow-xl transition-all duration-300">
+                      <div className="text-2xl font-bold">{event.date}</div>
+                      <div className="text-xs opacity-90">{event.month}</div>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{event.title}</h4>
-                      <p className="text-sm text-gray-500">{event.time}</p>
-                      <div className="flex items-center text-xs text-gray-400 mt-1">
+                      <h4 className="font-bold text-slate-800 text-lg mb-1">{event.title}</h4>
+                      <p className="text-sm text-slate-600 mb-2">{event.time}</p>
+                      <div className="flex items-center text-xs text-slate-500">
                         <MapPin className="w-3 h-3 mr-1" />
                         {event.location}
                       </div>
@@ -277,20 +367,23 @@ export default function EmployeePortal() {
             </div>
 
             {/* Holidays */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-                <h3 className="text-lg font-semibold">Holidays</h3>
+            <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
+              <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-8 py-6 rounded-t-3xl">
+                <h3 className="text-xl font-bold flex items-center">
+                  <Calendar className="w-6 h-6 mr-3" />
+                  Holidays
+                </h3>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-8 space-y-6">
                 {holidays.map((holiday, index) => (
-                  <div key={index} className="flex space-x-4">
-                    <div className="bg-red-500 text-white text-center rounded p-2 min-w-[60px]">
-                      <div className="text-xl font-bold">{holiday.date}</div>
-                      <div className="text-xs">{holiday.month}</div>
+                  <div key={index} className="flex space-x-4 group">
+                    <div className="bg-gradient-to-r from-red-500 to-red-600 text-white text-center rounded-2xl p-4 min-w-[80px] shadow-lg group-hover:shadow-xl transition-all duration-300">
+                      <div className="text-2xl font-bold">{holiday.date}</div>
+                      <div className="text-xs opacity-90">{holiday.month}</div>
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{holiday.title}</h4>
-                      <p className="text-sm text-gray-500">{holiday.subtitle}</p>
+                      <h4 className="font-bold text-slate-800 text-lg mb-1">{holiday.title}</h4>
+                      <p className="text-sm text-slate-600">{holiday.subtitle}</p>
                     </div>
                   </div>
                 ))}
@@ -300,22 +393,33 @@ export default function EmployeePortal() {
         </div>
 
         {/* Right Sidebar */}
-        <div className="w-96 p-6 space-y-6">
+        <div className="w-96 p-8 space-y-8">
           {/* Surveys */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-lg font-semibold">Surveys</h3>
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
+            <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-8 py-6 rounded-t-3xl">
+              <h3 className="text-xl font-bold flex items-center">
+                <MessageSquare className="w-6 h-6 mr-3" />
+                Active Surveys
+              </h3>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-8 space-y-6">
               {surveys.map((survey, index) => (
-                <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
-                  <div className="flex items-start space-x-3">
-                    <div className="text-2xl">{survey.icon}</div>
+                <div key={index} className="border-b border-slate-200 pb-6 last:border-b-0 last:pb-0">
+                  <div className="flex items-start space-x-4">
+                    <div className="text-3xl">{survey.icon}</div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{survey.title}</h4>
-                      <p className="text-sm text-blue-600 font-medium">{survey.category}</p>
-                      <p className="text-xs text-gray-500 mt-1">📅 {survey.daysRemaining} days Remaining</p>
-                      <p className="text-sm text-gray-600 mt-2">{survey.description}</p>
+                      <h4 className="font-bold text-slate-800 text-lg mb-1">{survey.title}</h4>
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r ${survey.gradient} text-white mb-2`}>
+                        {survey.category}
+                      </div>
+                      <div className="flex items-center text-xs text-slate-500 mb-3">
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {survey.daysRemaining} days remaining
+                      </div>
+                      <p className="text-sm text-slate-600 mb-4">{survey.description}</p>
+                      <button className="bg-gradient-to-r from-teal-500 to-teal-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5">
+                        Take Survey
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -324,26 +428,26 @@ export default function EmployeePortal() {
           </div>
 
           {/* Company Calendar */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-6 rounded-t-3xl">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Company Calendar</h2>
+                <h2 className="text-xl font-bold">Company Calendar</h2>
                 <div className="flex items-center space-x-2">
-                  <button className="p-1 hover:bg-blue-500 rounded">
+                  <button className="p-2 hover:bg-white/20 rounded-lg transition-colors">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <span className="text-sm font-medium">December 2024</span>
-                  <button className="p-1 hover:bg-blue-500 rounded">
+                  <button className="p-2 hover:bg-white/20 rounded-lg transition-colors">
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             </div>
             
-            <div className="p-6">
+            <div className="p-8">
               <div className="grid grid-cols-7 gap-1 mb-4">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
+                  <div key={day} className="p-2 text-center text-sm font-semibold text-slate-500">
                     {day}
                   </div>
                 ))}
@@ -359,19 +463,19 @@ export default function EmployeePortal() {
                   return (
                     <div
                       key={i}
-                      className={`p-2 text-center text-sm h-10 flex items-center justify-center relative ${
+                      className={`p-2 text-center text-sm h-10 flex items-center justify-center relative transition-all duration-200 ${
                         isCurrentMonth 
                           ? isToday 
-                            ? 'bg-blue-600 text-white rounded-full' 
+                            ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl shadow-lg' 
                             : hasEvent 
-                              ? 'bg-blue-100 text-blue-800 rounded-full font-medium cursor-pointer hover:bg-blue-200' 
-                              : 'text-gray-900 hover:bg-gray-100 rounded-full cursor-pointer'
-                          : 'text-gray-300'
+                              ? 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 rounded-xl font-semibold cursor-pointer hover:from-blue-200 hover:to-blue-300 hover:shadow-md' 
+                              : 'text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer'
+                          : 'text-slate-300'
                       }`}
                     >
                       {isCurrentMonth ? day : ''}
                       {hasEvent && !isToday && (
-                        <div className="absolute bottom-1 w-1 h-1 bg-blue-600 rounded-full"></div>
+                        <div className="absolute bottom-1 w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
                       )}
                     </div>
                   );
@@ -381,29 +485,32 @@ export default function EmployeePortal() {
           </div>
 
           {/* Find My Colleague */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
-              <h3 className="text-lg font-semibold">Find My Colleague</h3>
+          <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20">
+            <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-8 py-6 rounded-t-3xl">
+              <h3 className="text-xl font-bold flex items-center">
+                <Users className="w-6 h-6 mr-3" />
+                Find My Colleague
+              </h3>
             </div>
-            <div className="p-6">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div className="p-8">
+              <div className="relative mb-6">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search here"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white/50 backdrop-blur-sm transition-all duration-200"
                 />
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {colleagues.map((colleague, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  <div key={index} className="flex items-center space-x-4 p-4 bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl border border-slate-200 hover:from-slate-100 hover:to-slate-200 hover:shadow-md transition-all duration-200 cursor-pointer">
+                    <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-2xl flex items-center justify-center text-sm font-bold shadow-lg">
                       {colleague.avatar}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 text-sm">{colleague.name}</h4>
-                      <p className="text-xs text-gray-500">{colleague.role}</p>
-                      <p className="text-xs text-gray-400">{colleague.email}</p>
+                      <h4 className="font-bold text-slate-800 text-sm">{colleague.name}</h4>
+                      <p className="text-xs text-slate-600 mb-1">{colleague.role}</p>
+                      <p className="text-xs text-slate-500">{colleague.email}</p>
                     </div>
                   </div>
                 ))}
@@ -412,6 +519,14 @@ export default function EmployeePortal() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 }

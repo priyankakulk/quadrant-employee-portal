@@ -52,7 +52,7 @@ export default function SignInForm() {
               console.log('Navigating to admin panel');
               navigate('/admin-panel');
               break;
-            case 'manager':
+            case 'it':
               console.log('Navigating to manager panel');
               navigate('/manager-panel');
               break;
@@ -60,6 +60,9 @@ export default function SignInForm() {
               console.log('Navigating to employee portal');
               navigate('/portal');
               break;
+            case 'hr':
+              console.log('Navigating to HR portal')
+              navigate('/hr-portal')
             default:
               console.log('Unknown role:', role);
               alert('Unknown role. Please contact support.');
