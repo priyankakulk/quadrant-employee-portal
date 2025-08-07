@@ -5,5 +5,5 @@ pydantic
 python-dotenv
 passlib[bcrypt]
 azure-identity
-bycrypt
+bcrypt
 flask-cors
