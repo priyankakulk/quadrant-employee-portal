@@ -1,87 +1,89 @@
 # app/api/anonymous_feedback.py
- 
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from app.services.connect import get_connection
 import datetime
- 
+
 router = APIRouter()
- 
-# 🧾 Model for incoming feedback
+
+# Model for incoming feedback
 class AnonymousFeedbackRequest(BaseModel):
-    sender_employee: str
-    employee_id: str
-    name: str
-    subject: str
-    message: str
-    submit_date: datetime.date
-    severity: str         # "Low", "Medium", or "High"
-    category: str         # "Manager" or "HR"
- 
-# 📤 Endpoint to submit feedback
+    date_lodged: datetime.date
+    description: str
+    involved_party: Optional[str] = None
+    previously_reported: str  # "Yes", "No", "Prefer not to say"
+    severity: str             # "Low", "Medium", or "High"
+    is_women_specific: Optional[bool] = False  # NEW field
+
+# General feedback submission (default: not women-specific)
 @router.post("/submit-anonymous-feedback")
 def submit_anonymous_feedback(feedback: AnonymousFeedbackRequest):
+    return _insert_feedback(feedback)
+
+# Women-specific feedback submission
+@router.post("/submit-women-anonymous-feedback")
+def submit_women_feedback(feedback: AnonymousFeedbackRequest):
+    feedback.is_women_specific = True
+    return _insert_feedback(feedback)
+
+# Internal function to insert feedback
+def _insert_feedback(feedback: AnonymousFeedbackRequest):
     try:
         with get_connection() as conn:
             cursor = conn.cursor()
- 
             cursor.execute("""
                 INSERT INTO AnonymousFeedback
-                (SenderEmployee, EmployeeID, Name, Subject, Message, SubmitDate, Severity, Category)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (DateLodged, Description, InvolvedParty, PreviouslyReported, Severity, IsWomenSpecific)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, (
-                feedback.sender_employee,
-                feedback.employee_id,
-                feedback.name,
-                feedback.subject,
-                feedback.message,
-                feedback.submit_date,
+                feedback.date_lodged,
+                feedback.description,
+                feedback.involved_party,
+                feedback.previously_reported,
                 feedback.severity,
-                feedback.category
+                feedback.is_women_specific
             ))
- 
             conn.commit()
             return {"message": "Feedback submitted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
- 
-# 🛠️ Optional route to init DB and populate with sample data
+
+# Optional route to init DB and populate with fake data
 @router.get("/init-feedback-db")
 def init_feedback_db():
     try:
         with get_connection() as conn:
             cursor = conn.cursor()
- 
             # Create table
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS AnonymousFeedback (
                     FeedbackID INTEGER PRIMARY KEY AUTOINCREMENT,
-                    SenderEmployee TEXT,
-                    EmployeeID TEXT,
-                    Name TEXT,
-                    Subject TEXT,
-                    Message TEXT,
-                    SubmitDate DATE,
+                    DateLodged DATE,
+                    Description TEXT,
+                    InvolvedParty TEXT,
+                    PreviouslyReported TEXT,
                     Severity TEXT,
-                    Category TEXT
+                    IsWomenSpecific BOOLEAN DEFAULT 0
                 );
             """)
- 
-            # Insert sample entries
+
+            # Insert sample entries (some women-specific)
             sample_entries = [
-                ("emp101", "E001", "John Doe", "Unfair treatment", "Felt isolated by manager", "2025-07-24", "High", "Manager"),
-                ("emp102", "E002", "Jane Smith", "Late approvals", "HR delayed my leave request", "2025-07-22", "Medium", "HR"),
-                ("emp103", "E003", "Raj Patel", "Verbal aggression", "Manager raised voice in meeting", "2025-07-20", "High", "Manager"),
-                ("emp104", "E004", "Anna Liu", "Ignored requests", "Team requests repeatedly ignored by HR", "2025-07-18", "Low", "HR"),
-                ("emp105", "E005", "Carlos Ramirez", "Disrespectful comments", "Inappropriate joke from team lead", "2025-07-16", "Medium", "Manager")
+                ("2025-07-24", "Inappropriate comments during a Zoom meeting.", "Sarah Thompson, IT Lead", "No", "High", True),
+                ("2025-07-22", "Discriminatory remarks toward an intern.", "", "Prefer not to say", "Medium", True),
+                ("2025-07-20", "Team member raises voice aggressively.", "Robert King, HR", "Yes", "Low", False),
+                ("2025-07-19", "Dismissive behavior in meetings.", "Emily Davis, Project Manager", "No", "Medium", False),
+                ("2025-07-18", "Unwelcome jokes at work.", "", "Prefer not to say", "Low", True)
             ]
- 
+
             cursor.executemany("""
-                INSERT INTO AnonymousFeedback
-                (SenderEmployee, EmployeeID, Name, Subject, Message, SubmitDate, Severity, Category)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO AnonymousFeedback 
+                (DateLodged, Description, InvolvedParty, PreviouslyReported, Severity, IsWomenSpecific)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, sample_entries)
- 
+
             conn.commit()
             return {"message": "Table created and data populated"}
     except Exception as e:
