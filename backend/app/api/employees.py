@@ -1,10 +1,10 @@
 #from fastapi import FastAPI
 # from fastapi.middleware.cors import CORSMiddleware
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request, HTTPException
 from typing import Optional
 import bcrypt
 from app.services.connect import get_connection
-
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -18,49 +18,49 @@ router = APIRouter()
 # )
 
 
-@router.get("/employees")
-def get_employee_by_username(username: Optional[str] = Query(None), password: Optional[str] = Query(None)):
-    #hashAll()
-    #print("hello", username)
-    if(username):
-        with get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT employeeId, username, passwordHash
-                FROM Users
-                WHERE username = ?
-            """, (username,))
 
-            cred_row = cursor.fetchone()
-            if not cred_row:
-                return {"error": "User not found"}
-            
-            hashed_pw = cred_row[2]
-            #print(hashed_pw)
-            employee_id = cred_row[0]
-            if not bcrypt.checkpw(password.encode(), hashed_pw.encode()):   
-            # if hashed_pw != password:
-                return {"error": "Incorrect password"}
-            cursor.execute("""
-                SELECT employeeID, firstName, lastName, workEmail, role
-                FROM Employees
-                WHERE employeeId = ?
-            """, (employee_id,))
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
-            emp_row = cursor.fetchone()
-            if not emp_row:
-                return {"error": "Employee record not found"}
-            
-            return {
-                "id": emp_row[0],
-                "first_name": emp_row[1],
-                "last_name": emp_row[2],
-                "email": emp_row[3],
-                "role": emp_row[4]
-            }
-    cursor.close()
-    conn.close()
-    return {"error": "Username query parameter not provided"}
+@router.post("/employees")
+async def get_employee_by_username(login: LoginRequest):
+    username = login.username
+    password = login.password
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT employeeId, username, passwordHash
+            FROM Users
+            WHERE username = ?
+        """, (username,))
+
+        cred_row = cursor.fetchone()
+        if not cred_row:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        employee_id, _, hashed_pw = cred_row
+        if not bcrypt.checkpw(password.encode(), hashed_pw.encode()):
+            raise HTTPException(status_code=401, detail="Incorrect password")
+
+        cursor.execute("""
+            SELECT employeeID, firstName, lastName, workEmail, role
+            FROM Employees
+            WHERE employeeId = ?
+        """, (employee_id,))
+
+        emp_row = cursor.fetchone()
+        if not emp_row:
+            raise HTTPException(status_code=404, detail="Employee record not found")
+
+        return {
+            "id": emp_row[0],
+            "first_name": emp_row[1],
+            "last_name": emp_row[2],
+            "email": emp_row[3],
+            "role": emp_row[4]
+        }
 
 
 @router.get("/hashAll")

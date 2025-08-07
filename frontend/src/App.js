@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import SignInForm from './SignInForm'; // or './SignInForm.jsx'
+import SignInForm from './SignInForm.jsx'; // or './SignInForm.jsx'
 import ProfilePage from './profile-page.tsx'; // this is your portal
 
 function App() {
