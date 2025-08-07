@@ -12,7 +12,7 @@ stages:
         displayName: "Build Frontend"
         steps:
           - checkout: self
-            clean: true  # Ensures fresh copy from GitHub
+            clean: true
 
           - task: NodeTool@0
             inputs:
@@ -20,12 +20,19 @@ stages:
             displayName: 'Install Node.js'
 
           - script: |
+              echo "Installing dependencies..."
               cd frontend
-              npm ci
-              npm run build
-            displayName: 'Install & Build Frontend'
+              npm install
+            displayName: 'Install Frontend Dependencies'
 
           - script: |
+              echo "Building frontend..."
+              cd frontend
+              npm run build
+            displayName: 'Build Frontend'
+
+          - script: |
+              echo "Zipping build output..."
               cd frontend/build
               zip -r ../../frontend.zip .
             displayName: 'Zip Frontend Build Output'
@@ -48,6 +55,7 @@ stages:
             displayName: 'Set Python Version'
 
           - script: |
+              echo "Installing backend dependencies and zipping..."
               cd backend
               python -m pip install --upgrade pip
               pip install -r requirements.txt
@@ -64,4 +72,8 @@ stages:
     displayName: "Deploy Frontend and Backend"
     dependsOn: Build
     jobs:
-      - job: de
+      - job: deploy
+        displayName: "Deploy"
+        steps:
+          - script: echo "Deployment step goes here"
+            displayName: 'Placeholder for Deployment'
