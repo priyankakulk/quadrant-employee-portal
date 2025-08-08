@@ -6,4 +6,4 @@ python-dotenv
 passlib[bcrypt]
 azure-identity
 bcrypt
-flask-cors
+# flask-cors

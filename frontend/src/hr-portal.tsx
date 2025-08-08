@@ -67,7 +67,7 @@ export default function EmployeePortal() {
       navigate('/timesheet');
     }
     else if (title === "Ticketing") {
-      navigate('/ticketing');
+      navigate('/ticket');
     }
     else if (title === "Induction") {
       navigate('/induction-modules');

@@ -37,11 +37,11 @@ def get_it_tickets(
 
     results = [
         {
-            "ticket_number": row.ticket_number,
+            "ticket_number": row.ticketNumber,
             "employeeId": row.employeeId,
-            "status": row.status,
+            "status": row.Status,
             "message": row.message,
-            "handled_by": row.handled_by
+            "handled_by": row.HandledBy
         }
         for row in rows
     ]
