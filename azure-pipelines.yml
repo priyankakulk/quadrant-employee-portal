@@ -25,7 +25,6 @@ stages:
         npm run build
       displayName: Install deps & build
 
-    # Zip frontend/build -> $(Build.ArtifactStagingDirectory)/frontend.zip
     - task: ArchiveFiles@2
       displayName: Archive frontend
       inputs:
@@ -38,8 +37,8 @@ stages:
     - task: PublishBuildArtifacts@1
       displayName: Publish Frontend artifact
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend.zip'
-        ArtifactName: 'Frontend'
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/frontend.zip'
+        artifactName: 'Frontend'
         publishLocation: 'Container'
 
   - job: backend
@@ -53,13 +52,16 @@ stages:
         versionSpec: '3.11'
       displayName: Set Python Version
 
-    # (Optional) validate requirements; not needed to create the zip
+    # Optional: only install if requirements.txt exists
     - script: |
         python -m pip install --upgrade pip
-        pip install -r backend/requirements.txt
+        if [ -f "$(Build.SourcesDirectory)/backend/requirements.txt" ]; then
+          pip install -r "$(Build.SourcesDirectory)/backend/requirements.txt"
+        else
+          echo "No backend/requirements.txt found; skipping pip install."
+        fi
       displayName: Install backend deps (optional)
 
-    # Zip backend folder -> $(Build.ArtifactStagingDirectory)/backend.zip
     - task: ArchiveFiles@2
       displayName: Archive backend
       inputs:
@@ -72,8 +74,8 @@ stages:
     - task: PublishBuildArtifacts@1
       displayName: Publish Backend artifact
       inputs:
-        PathtoPublish: '$(Build.ArtifactStagingDirectory)/backend.zip'
-        ArtifactName: 'Backend'
+        pathToPublish: '$(Build.ArtifactStagingDirectory)/backend.zip'
+        artifactName: 'Backend'
         publishLocation: 'Container'
 
 - stage: Deploy
