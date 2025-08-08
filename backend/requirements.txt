@@ -1,9 +1,20 @@
-fastapi
-uvicorn[standard]
-pyodbc
-pydantic
-python-dotenv
-passlib[bcrypt]
-azure-identity
-bcrypt
-flask-cors
+# ASGI stack
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+gunicorn>=21.2,<22.0
+
+# Data models & env
+pydantic>=2.0,<3.0
+python-dotenv>=1.0,<2.0
+
+# Auth / hashing
+passlib[bcrypt]>=1.7,<2.0
+
+# Azure & DB
+azure-identity>=1.15,<2.0
+pyodbc>=5.0,<6.0
+
+# (Optional, uncomment if you actually use them)
+# httpx>=0.25,<1.0        # outbound HTTP calls
+# aiofiles>=23.0,<24.0    # serving files with FastAPI
+# cryptography>=42,<43    # if you handle certs/keys directly
