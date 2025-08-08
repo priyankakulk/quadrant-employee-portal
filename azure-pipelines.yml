@@ -5,75 +5,83 @@ pool:
   vmImage: 'ubuntu-latest'
 
 stages:
-  - stage: Build
-    displayName: "Build Frontend and Backend"
-    jobs:
-      - job: frontend
-        displayName: "Build Frontend"
-        steps:
-          - checkout: self
-            clean: true
+- stage: Build
+  displayName: Build Frontend and Backend
+  jobs:
+  - job: frontend
+    displayName: Build Frontend
+    steps:
+    - checkout: self
+      clean: true
 
-          - task: NodeTool@0
-            inputs:
-              versionSpec: '18.x'
-            displayName: 'Install Node.js'
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: Install Node.js
 
-          - script: |
-              echo "Installing dependencies..."
-              cd frontend
-              npm install
-            displayName: 'Install Frontend Dependencies'
+    - script: |
+        cd frontend
+        npm ci
+        npm run build
+      displayName: Install deps & build
 
-          - script: |
-              echo "Building frontend..."
-              cd frontend
-              npm run build
-            displayName: 'Build Frontend'
+    # Zip frontend/build -> $(Build.ArtifactStagingDirectory)/frontend.zip
+    - task: ArchiveFiles@2
+      displayName: Archive frontend
+      inputs:
+        rootFolderOrFile: '$(Build.SourcesDirectory)/frontend/build'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/frontend.zip'
+        replaceExistingArchive: true
 
-          - script: |
-              echo "Zipping build output..."
-              cd frontend/build
-              zip -r ../../frontend.zip .
-            displayName: 'Zip Frontend Build Output'
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Frontend artifact
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend.zip'
+        ArtifactName: 'Frontend'
+        publishLocation: 'Container'
 
-          - task: PublishBuildArtifacts@1
-            inputs:
-              pathToPublish: 'frontend.zip'
-              artifactName: 'Frontend'
-              publishLocation: 'Container'
+  - job: backend
+    displayName: Build Backend
+    steps:
+    - checkout: self
+      clean: true
 
-      - job: backend
-        displayName: "Build Backend"
-        steps:
-          - checkout: self
-            clean: true
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11'
+      displayName: Set Python Version
 
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '3.11'
-            displayName: 'Set Python Version'
+    # (Optional) validate requirements; not needed to create the zip
+    - script: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+      displayName: Install backend deps (optional)
 
-          - script: |
-              echo "Installing backend dependencies and zipping..."
-              cd backend
-              python -m pip install --upgrade pip
-              pip install -r requirements.txt
-              zip -r ../backend.zip .
-            displayName: 'Install & Zip Backend Code'
+    # Zip backend folder -> $(Build.ArtifactStagingDirectory)/backend.zip
+    - task: ArchiveFiles@2
+      displayName: Archive backend
+      inputs:
+        rootFolderOrFile: '$(Build.SourcesDirectory)/backend'
+        includeRootFolder: true
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/backend.zip'
+        replaceExistingArchive: true
 
-          - task: PublishBuildArtifacts@1
-            inputs:
-              pathToPublish: 'backend.zip'
-              artifactName: 'Backend'
-              publishLocation: 'Container'
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Backend artifact
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/backend.zip'
+        ArtifactName: 'Backend'
+        publishLocation: 'Container'
 
-  - stage: Deploy
-    displayName: "Deploy Frontend and Backend"
-    dependsOn: Build
-    jobs:
-      - job: deploy
-        displayName: "Deploy"
-        steps:
-          - script: echo "Deployment step goes here"
-            displayName: 'Placeholder for Deployment'
+- stage: Deploy
+  displayName: Deploy Frontend and Backend
+  dependsOn: Build
+  jobs:
+  - job: deploy
+    displayName: Deploy
+    steps:
+    - script: echo "Deployment step goes here"
+      displayName: Placeholder for Deployment
