@@ -20,7 +20,7 @@ stages:
             displayName: 'Install Node.js'
 
           - script: |
-              echo "Installing dependencies..."
+              echo "Installing frontend dependencies..."
               cd frontend
               npm install
             displayName: 'Install Frontend Dependencies'
@@ -32,7 +32,7 @@ stages:
             displayName: 'Build Frontend'
 
           - script: |
-              echo "Zipping build output..."
+              echo "Zipping frontend build output..."
               cd frontend/build
               zip -r ../../frontend.zip .
             displayName: 'Zip Frontend Build Output'
@@ -55,7 +55,7 @@ stages:
             displayName: 'Set Python Version'
 
           - script: |
-              echo "Installing backend dependencies and zipping..."
+              echo "Installing backend dependencies..."
               cd backend
               python -m pip install --upgrade pip
               pip install -r requirements.txt
@@ -75,5 +75,31 @@ stages:
       - job: deploy
         displayName: "Deploy"
         steps:
-          - script: echo "Deployment step goes here"
-            displayName: 'Placeholder for Deployment'
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              artifactName: 'Backend'
+              downloadPath: '$(Pipeline.Workspace)'
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.11'
+            displayName: 'Set Python Version for Deployment'
+
+          - script: |
+              echo "Unzipping backend artifact..."
+              unzip $(Pipeline.Workspace)/Backend/backend.zip -d backend
+              cd backend
+
+              echo "Installing backend dependencies..."
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+
+              echo "Starting backend with Uvicorn..."
+              nohup python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+
+              echo "Waiting for API to start..."
+              sleep 10
+
+              echo "Testing API endpoint..."
+              curl http://127.0.0.1:8000/docs || echo "API not reachable"
+            displayName: 'Start & Test Backend API'
