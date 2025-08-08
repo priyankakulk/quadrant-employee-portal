@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import employees, tickets, onboarding, itaassets
-from app.api.who import router as who_router
+from app.api import employees, tickets, onboarding, itaassets, who
 
 app = FastAPI(title="Gateway Backend API")
 
@@ -22,7 +21,7 @@ app.include_router(employees.router, prefix="/api")
 app.include_router(tickets.router, prefix="/api")
 app.include_router(onboarding.router, prefix="/api")
 app.include_router(itaassets.router, prefix="/api")
-app.include_router(who_router, prefix="/api")
+app.include_router(who.router, prefix="/api")
 
 @app.get("/", tags=["health"])
 def root():
