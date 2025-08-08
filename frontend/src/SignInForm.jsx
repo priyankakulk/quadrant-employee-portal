@@ -25,7 +25,7 @@ export default function SignInForm() {
     }
 
     try {
-      const res = await fetch('https://gateway-backend-api-edecfug5h7fqd2bp.eastus-01.azurewebsites.net/api/employees', {
+      const res = await fetch('http://localhost:8000/api/employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

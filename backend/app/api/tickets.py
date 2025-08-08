@@ -50,8 +50,10 @@ def get_tickets(user: Optional[int] = Query(None),
                 "ticketNumber": row.ticketNumber,
                 "employeeId": row.employeeId,
                 "severity": row.severity,
-                "status": row.status,
+                "status": row.ticket_status,
                 "startDate": row.startDate,
+                "message": row.message,
+                "handled_by": row.handledBy
             }
             for row in rows
         ]
